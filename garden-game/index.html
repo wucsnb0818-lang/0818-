@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 花園播種者 · 單局金幣版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(145deg, #f7f0e6 0%, #e8ddd0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 248, 240, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 48px;
+            padding: 28px 32px 32px 32px;
+            max-width: 660px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(100, 70, 40, 0.2), 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 235, 210, 0.5);
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #4a3a2a;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8a7a6a;
+            font-size: 13px;
+            margin-bottom: 16px;
+            border-bottom: 1px dashed #dccfc0;
+            padding-bottom: 10px;
+        }
+
+        /* 花園網格 */
+        .garden {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 12px 0 20px 0;
+            aspect-ratio: 1 / 1;
+            background: #b8a48a;
+            padding: 10px;
+            border-radius: 24px;
+            box-shadow: inset 0 -4px 0 #8a7a66, 0 8px 20px rgba(80, 60, 40, 0.2);
+        }
+
+        .cell {
+            background: #f5ede4;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 -4px 0 #cdbcab, 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
+            aspect-ratio: 1 / 1;
+            user-select: none;
+            position: relative;
+            gap: 2px;
+            padding: 4px;
+        }
+
+        .cell.empty {
+            background: #e5d9cd;
+            box-shadow: inset 0 -2px 0 #cbbaaa;
+            font-size: 24px;
+            color: #b09a86;
+        }
+
+        .cell .emoji {
+            font-size: 36px;
+            line-height: 1.2;
+        }
+
+        .cell .price-tag {
+            font-size: 12px;
+            font-weight: 700;
+            color: #b8860b;
+            background: rgba(255, 215, 0, 0.25);
+            padding: 0 8px;
+            border-radius: 20px;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            min-height: 20px;
+        }
+
+        .cell .price-tag.hidden {
+            opacity: 0;
+            min-height: 20px;
+        }
+
+        .cell .price-tag.question {
+            color: #a09080;
+            background: rgba(160, 140, 120, 0.15);
+        }
+
+        .cell.reveal {
+            animation: pop 0.35s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.7); opacity: 0.4; }
+            60% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 按鈕區 */
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 8px 0 12px 0;
+        }
+
+        .btn {
+            background: #e6d8c8;
+            border: none;
+            border-radius: 60px;
+            padding: 10px 22px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #3f3224;
+            box-shadow: 0 4px 0 #b8a48c, 0 4px 12px rgba(80, 60, 40, 0.1);
+            cursor: pointer;
+            transition: all 0.08s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1 1 auto;
+            justify-content: center;
+            min-width: 80px;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #b8a48c, 0 4px 12px rgba(80, 60, 40, 0.08);
+        }
+
+        .btn-primary {
+            background: #b6d7b0;
+            box-shadow: 0 4px 0 #7fa078;
+            color: #2b3d26;
+        }
+
+        .btn-secondary {
+            background: #d4c9bc;
+            box-shadow: 0 4px 0 #b0a292;
+        }
+
+        .btn-success {
+            background: #c7d6b0;
+            box-shadow: 0 4px 0 #93a07a;
+            color: #2f3d22;
+        }
+
+        .btn-gold {
+            background: #f5d98a;
+            box-shadow: 0 4px 0 #c9a84c;
+            color: #5a451a;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            transform: translateY(4px);
+            box-shadow: 0 0px 0 #b8a48c;
+            pointer-events: none;
+        }
+
+        /* 資訊面板 - 單局顯示 */
+        .info-panel {
+            background: #f5ede4;
+            border-radius: 20px;
+            padding: 14px 18px;
+            margin: 12px 0 8px 0;
+            border: 1px solid #e0d2c2;
+            font-size: 14px;
+            color: #3f3224;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .info-panel .big-gold {
+            font-size: 28px;
+            font-weight: 700;
+            color: #b8860b;
+        }
+
+        .info-panel .sub-gold {
+            font-size: 14px;
+            color: #7a6a5a;
+        }
+
+        .log {
+            background: #fcf8f2;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 10px 0 4px 0;
+            font-size: 14px;
+            color: #4d3d2d;
+            border-left: 4px solid #b8a48a;
+            min-height: 48px;
+            transition: all 0.2s;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log .gold-text {
+            color: #b8860b;
+            font-weight: 600;
+        }
+
+        .log .highlight {
+            color: #8f6b3f;
+            font-weight: 500;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            justify-content: center;
+            font-size: 12px;
+            color: #6a5a4a;
+            margin-top: 10px;
+            border-top: 1px solid #e0d2c2;
+            padding-top: 12px;
+        }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 價格對照表 */
+        .price-table {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            justify-content: center;
+            font-size: 12px;
+            color: #5a4a3a;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fcf8f2;
+            border-radius: 14px;
+            border: 1px solid #e8ddd0;
+        }
+
+        .price-table span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 響應式 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 16px 14px 22px 14px;
+            }
+            .cell .emoji {
+                font-size: 28px;
+            }
+            .cell .price-tag {
+                font-size: 10px;
+                padding: 0 6px;
+            }
+            .garden {
+                gap: 6px;
+                padding: 6px;
+            }
+            .btn {
+                font-size: 14px;
+                padding: 8px 14px;
+                min-width: 60px;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            .info-panel .big-gold {
+                font-size: 22px;
+            }
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px 8px;
+            font-size: 13px;
+            margin-top: 6px;
+            text-align: left;
+            color: #4a3a2a;
+        }
+        .detail-grid .d-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <h1>🌸 花園播種者</h1>
+    <div class="subtitle">💰 單局金幣版 · 每局全新開始</div>
+
+    <!-- 花園 -->
+    <div class="garden" id="garden"></div>
+
+    <!-- 操作按鈕 -->
+    <div class="actions">
+        <button class="btn btn-primary" id="btnSow">🌱 播種</button>
+        <button class="btn btn-success" id="btnHarvest" disabled>🌿 收成</button>
+        <button class="btn btn-secondary" id="btnReset">🔄 新的一局</button>
+    </div>
+
+    <!-- 單局資訊 -->
+    <div class="info-panel" id="infoPanel">
+        <div class="sub-gold">💰 本局金幣</div>
+        <div class="big-gold" id="totalGold">0</div>
+        <div style="margin-top:6px; font-size:13px; color:#7a6a5a;">
+            花朵數：<span id="flowerCountDisplay">0</span> 種
+        </div>
+    </div>
+
+    <!-- 價格對照表（全部30種） -->
+    <div class="price-table" id="priceTable"></div>
+
+    <!-- 日誌 -->
+    <div class="log" id="log">🌱 點擊「播種」開始你的花園之旅</div>
+
+    <div class="legend">
+        <span>🌱 播種 9 格</span>
+        <span>🌿 一次收成</span>
+        <span>💰 每朵花不同價格</span>
+        <span>🔄 每局全新</span>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ============================================================
+        // 1. 定義 30 種花（5 個稀有度層級，價格 0~100）
+        // ============================================================
+        const FLOWERS = [
+            // 層級 0：雜草 / 垃圾（0~2 金幣）
+            { name: '雜草', emoji: '🌿', price: 0, tier: 0 },
+            { name: '枯葉', emoji: '🍂', price: 0, tier: 0 },
+            { name: '石頭', emoji: '🪨', price: 1, tier: 0 },
+            { name: '蒲公英', emoji: '🌾', price: 2, tier: 0 },
+            { name: '三葉草', emoji: '☘️', price: 2, tier: 0 },
+
+            // 層級 1：普通花（3~10 金幣）
+            { name: '向日葵', emoji: '🌻', price: 5, tier: 1 },
+            { name: '玫瑰', emoji: '🌹', price: 6, tier: 1 },
+            { name: '鬱金香', emoji: '🌷', price: 7, tier: 1 },
+            { name: '薰衣草', emoji: '💜', price: 8, tier: 1 },
+            { name: '雛菊', emoji: '🌼', price: 4, tier: 1 },
+            { name: '百合', emoji: '🤍', price: 9, tier: 1 },
+            { name: '牡丹', emoji: '🌺', price: 10, tier: 1 },
+            { name: '茉莉', emoji: '🤍', price: 6, tier: 1 },
+            { name: '櫻花', emoji: '🌸', price: 8, tier: 1 },
+            { name: '蘭花', emoji: '💮', price: 10, tier: 1 },
+
+            // 層級 2：稀有花（12~30 金幣）
+            { name: '螢光菊', emoji: '💫', price: 15, tier: 2 },
+            { name: '月光蘭', emoji: '🌙', price: 18, tier: 2 },
+            { name: '彩虹薔薇', emoji: '🌈', price: 22, tier: 2 },
+            { name: '藍寶石花', emoji: '💎', price: 25, tier: 2 },
+            { name: '幻影鈴蘭', emoji: '🔮', price: 20, tier: 2 },
+            { name: '星夜蓮', emoji: '🌌', price: 28, tier: 2 },
+            { name: '琥珀菊', emoji: '🧡', price: 12, tier: 2 },
+            { name: '水晶蘭', emoji: '❄️', price: 30, tier: 2 },
+
+            // 層級 3：史詩花（35~60 金幣）
+            { name: '極光蘭', emoji: '🌠', price: 40, tier: 3 },
+            { name: '太陽神花', emoji: '☀️', price: 45, tier: 3 },
+            { name: '銀河雛菊', emoji: '🌌', price: 50, tier: 3 },
+            { name: '鳳凰花', emoji: '🔥', price: 55, tier: 3 },
+            { name: '幻光百合', emoji: '✨', price: 38, tier: 3 },
+            { name: '暗夜薔薇', emoji: '🌹', price: 60, tier: 3 },
+
+            // 層級 4：傳說花（70~100 金幣）
+            { name: '星塵玫瑰', emoji: '⭐', price: 80, tier: 4 },
+            { name: '永恆向日葵', emoji: '🌟', price: 85, tier: 4 },
+            { name: '創世花', emoji: '🌀', price: 90, tier: 4 },
+            { name: '混沌鬱金香', emoji: '🌋', price: 95, tier: 4 },
+            { name: '神蹟百合', emoji: '👑', price: 100, tier: 4 },
+        ];
+
+        // 按層級分組（用於機率抽選）
+        const TIER_GROUPS = {
+            0: FLOWERS.filter(f => f.tier === 0),
+            1: FLOWERS.filter(f => f.tier === 1),
+            2: FLOWERS.filter(f => f.tier === 2),
+            3: FLOWERS.filter(f => f.tier === 3),
+            4: FLOWERS.filter(f => f.tier === 4),
+        };
+
+        // 各層級出現機率（總和 1）
+        const TIER_PROB = {
+            0: 0.35,   // 35% 雜草/垃圾
+            1: 0.30,   // 30% 普通花
+            2: 0.20,   // 20% 稀有花
+            3: 0.10,   // 10% 史詩花
+            4: 0.05,   // 5% 傳說花
+        };
+
+        // 隨機選取一朵花（根據層級機率）
+        function getRandomFlower() {
+            const r = Math.random();
+            let tier;
+            let cum = 0;
+            for (const [t, prob] of Object.entries(TIER_PROB)) {
+                cum += prob;
+                if (r < cum) {
+                    tier = parseInt(t);
+                    break;
+                }
+            }
+            if (tier === undefined) tier = 0;
+            const pool = TIER_GROUPS[tier];
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // ============================================================
+        // 2. 遊戲狀態（單局）
+        // ============================================================
+        let state = {
+            garden: Array(9).fill(null),   // null 或 { name, emoji, price, tier }
+            phase: 'idle',                 // 'idle' | 'sown' | 'harvested'
+            totalGold: 0,
+            flowerTypes: new Set(),        // 本局出現過的花名（用於顯示種類數）
+        };
+
+        // ============================================================
+        // 3. DOM 元素
+        // ============================================================
+        const gardenEl = document.getElementById('garden');
+        const btnSow = document.getElementById('btnSow');
+        const btnHarvest = document.getElementById('btnHarvest');
+        const btnReset = document.getElementById('btnReset');
+        const logEl = document.getElementById('log');
+        const totalGoldEl = document.getElementById('totalGold');
+        const flowerCountDisplay = document.getElementById('flowerCountDisplay');
+        const priceTableEl = document.getElementById('priceTable');
+
+        // ============================================================
+        // 4. 渲染函數
+        // ============================================================
+        function renderGarden() {
+            gardenEl.innerHTML = '';
+            state.garden.forEach((cell, idx) => {
+                const div = document.createElement('div');
+                div.className = 'cell';
+                if (cell === null) {
+                    div.classList.add('empty');
+                    div.textContent = '‧';
+                } else {
+                    // 花朵 emoji
+                    const emojiSpan = document.createElement('span');
+                    emojiSpan.className = 'emoji';
+                    emojiSpan.textContent = cell.emoji;
+                    div.appendChild(emojiSpan);
+
+                    // 價格標籤
+                    const priceSpan = document.createElement('span');
+                    priceSpan.className = 'price-tag';
+
+                    if (state.phase === 'harvested') {
+                        // 已收成：顯示價格
+                        priceSpan.textContent = cell.price + '💰';
+                        priceSpan.classList.remove('question', 'hidden');
+                    } else if (state.phase === 'sown') {
+                        // 已播種未收成：顯示問號
+                        priceSpan.textContent = '?💰';
+                        priceSpan.classList.add('question');
+                        priceSpan.classList.remove('hidden');
+                    } else {
+                        // idle：隱藏
+                        priceSpan.textContent = '';
+                        priceSpan.classList.add('hidden');
+                    }
+
+                    div.appendChild(priceSpan);
+
+                    if (state.phase === 'harvested') {
+                        div.classList.add('reveal');
+                    }
+                }
+                gardenEl.appendChild(div);
+            });
+        }
+
+        function updateInfo() {
+            totalGoldEl.textContent = state.totalGold;
+            flowerCountDisplay.textContent = state.flowerTypes.size;
+        }
+
+        function renderPriceTable() {
+            // 顯示所有 30 種花（按價格排序）
+            const sorted = [...FLOWERS].sort((a, b) => a.price - b.price);
+            let html = '';
+            sorted.forEach(f => {
+                html += `<span>${f.emoji} ${f.name} = ${f.price}💰</span>`;
+            });
+            priceTableEl.innerHTML = html;
+        }
+
+        function setLog(msg, isGold = false) {
+            if (isGold) {
+                logEl.innerHTML = `<span class="gold-text">${msg}</span>`;
+            } else {
+                logEl.innerHTML = msg;
+            }
+        }
+
+        // ============================================================
+        // 5. 核心遊戲邏輯
+        // ============================================================
+        function resetGame() {
+            state.garden = Array(9).fill(null);
+            state.phase = 'idle';
+            state.totalGold = 0;
+            state.flowerTypes = new Set();
+            renderGarden();
+            updateInfo();
+            setLog('🌱 新的一局！點擊「播種」開始');
+            btnSow.disabled = false;
+            btnHarvest.disabled = true;
+        }
+
+        function sowSeeds() {
+            if (state.phase === 'sown') {
+                setLog('⏳ 已經播種了，請先收成！');
+                return;
+            }
+
+            // 清空花園（如果是收成後的狀態）
+            if (state.phase === 'harvested') {
+                state.garden = Array(9).fill(null);
+                state.totalGold = 0;
+                state.flowerTypes = new Set();
+            }
+
+            // 填入種子（暫用 placeholder）
+            for (let i = 0; i < 9; i++) {
+                state.garden[i] = { name: '種子', emoji: '🌱', price: null, tier: -1 };
+            }
+            state.phase = 'sown';
+            renderGarden();
+            updateInfo();
+            btnSow.disabled = true;
+            btnHarvest.disabled = false;
+            setLog('🌱 種子已播下，點擊「收成」看看長出什麼！');
+        }
+
+        function harvest() {
+            if (state.phase !== 'sown') {
+                setLog('⚠️ 還沒有播種呢！');
+                return;
+            }
+
+            // 產生 9 朵花
+            const results = [];
+            let totalGold = 0;
+            const flowerTypes = new Set();
+
+            for (let i = 0; i < 9; i++) {
+                const flower = getRandomFlower();
+                state.garden[i] = { ...flower };
+                results.push(flower);
+                totalGold += flower.price;
+                flowerTypes.add(flower.name);
+            }
+
+            state.totalGold = totalGold;
+            state.flowerTypes = flowerTypes;
+            state.phase = 'harvested';
+
+            renderGarden();
+            updateInfo();
+
+            // 顯示收成明細（含每格價格）
+            let detailStr = results.map((f, idx) => {
+                return `${idx+1}:${f.emoji}${f.price}💰`;
+            }).join('  ');
+
+            // 計算各層級數量
+            const tierCount = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+            results.forEach(f => tierCount[f.tier]++);
+
+            let tierStr = '';
+            if (tierCount[0] > 0) tierStr += `🌿×${tierCount[0]} `;
+            if (tierCount[1] > 0) tierStr += `🌸×${tierCount[1]} `;
+            if (tierCount[2] > 0) tierStr += `✨×${tierCount[2]} `;
+            if (tierCount[3] > 0) tierStr += `🔥×${tierCount[3]} `;
+            if (tierCount[4] > 0) tierStr += `🌟×${tierCount[4]} `;
+
+            let msg = `💰 收成完畢！本局獲得 ${totalGold} 金幣\n`;
+            msg += `📊 ${tierStr}\n`;
+            msg += `📋 各格明細：${detailStr}`;
+
+            setLog(msg, true);
+
+            btnSow.disabled = false;
+            btnHarvest.disabled = true;
+        }
+
+        // ============================================================
+        // 6. 事件綁定
+        // ============================================================
+        btnSow.addEventListener('click', sowSeeds);
+        btnHarvest.addEventListener('click', harvest);
+        btnReset.addEventListener('click', resetGame);
+
+        // 點擊格子顯示詳細
+        gardenEl.addEventListener('click', function(e) {
+            const cellDiv = e.target.closest('.cell');
+            if (!cellDiv) return;
+            const idx = Array.from(gardenEl.children).indexOf(cellDiv);
+            if (idx === -1) return;
+            const data = state.garden[idx];
+            if (data === null) {
+                setLog(`📍 格子 ${idx+1}：空位`);
+            } else if (data.tier === -1) {
+                setLog(`📍 格子 ${idx+1}：🌱 已播種，等待收成`);
+            } else {
+                setLog(`📍 格子 ${idx+1}：${data.emoji} ${data.name}（${data.price}💰）`);
+            }
+        });
+
+        // ============================================================
+        // 7. 初始化
+        // ============================================================
+        renderPriceTable();
+        resetGame();
+        console.log('🌸 花園播種者 · 單局金幣版（30種花）已載入！');
+    })();
+</script>
+</body>
+</html>
