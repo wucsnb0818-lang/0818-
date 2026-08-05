@@ -26,7 +26,6 @@
             width: 100%;
         }
 
-        /* ===== 標題 ===== */
         .header {
             text-align: center;
             margin-bottom: 28px;
@@ -51,7 +50,6 @@
             letter-spacing: 1px;
         }
 
-        /* ===== 工具列 ===== */
         .toolbar {
             display: flex;
             justify-content: space-between;
@@ -123,14 +121,12 @@
             color: #b06050;
         }
 
-        /* ===== 音效網格 ===== */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 16px;
         }
 
-        /* ===== 單個音效方塊 ===== */
         .sound-card {
             background: #fcf8f2;
             border-radius: 20px;
@@ -159,7 +155,6 @@
             transform: scale(0.96);
         }
 
-        /* 自訂顏色（由 JavaScript 動態設定） */
         .sound-card .card-color {
             position: absolute;
             top: 0;
@@ -170,7 +165,6 @@
             background: #dccfc0;
         }
 
-        /* 圖片區域 */
         .sound-card .card-image {
             width: 56px;
             height: 56px;
@@ -196,7 +190,6 @@
             opacity: 0.5;
         }
 
-        /* 名稱 */
         .sound-card .card-name {
             font-size: 14px;
             font-weight: 500;
@@ -207,7 +200,6 @@
             max-width: 100%;
         }
 
-        /* 操作按鈕（hover 時顯示） */
         .sound-card .card-actions {
             position: absolute;
             top: 8px;
@@ -249,7 +241,6 @@
             color: #b06050;
         }
 
-        /* 空狀態（新增按鈕） */
         .sound-card.add-card {
             border: 2px dashed rgba(200, 180, 160, 0.3);
             background: rgba(252, 248, 242, 0.4);
@@ -275,7 +266,7 @@
             letter-spacing: 1px;
         }
 
-        /* ===== 彈出視窗（Modal） ===== */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -477,7 +468,6 @@
             font-weight: 500;
         }
 
-        /* ===== 空狀態（沒有任何音效） ===== */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -495,49 +485,60 @@
             letter-spacing: 1px;
         }
 
-        /* ===== 響應式 ===== */
+        /* 載入中 */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #b09a86;
+        }
+
+        .loading .spinner {
+            font-size: 36px;
+            animation: spin 1.2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         @media (max-width: 600px) {
             .grid {
                 grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
                 gap: 12px;
             }
-
             .sound-card {
                 min-height: 110px;
                 padding: 12px 8px 10px 8px;
             }
-
             .sound-card .card-image {
                 width: 44px;
                 height: 44px;
                 font-size: 24px;
             }
-
             .sound-card .card-name {
                 font-size: 12px;
             }
-
             .modal {
                 padding: 24px 18px 24px 18px;
             }
-
             .header h1 {
                 font-size: 22px;
             }
-
             .toolbar {
                 flex-direction: column;
                 align-items: stretch;
             }
-
             .modal .form-row {
                 flex-direction: column;
             }
-
             .sound-card .card-actions {
                 opacity: 1;
             }
-
             .sound-card .card-actions .btn-icon {
                 width: 22px;
                 height: 22px;
@@ -550,24 +551,20 @@
                 grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
                 gap: 10px;
             }
-
             .sound-card {
                 min-height: 90px;
                 padding: 8px 6px 8px 6px;
                 border-radius: 14px;
             }
-
             .sound-card .card-image {
                 width: 36px;
                 height: 36px;
                 font-size: 20px;
                 border-radius: 10px;
             }
-
             .sound-card .card-name {
                 font-size: 11px;
             }
-
             .sound-card.add-card .add-icon {
                 font-size: 28px;
             }
@@ -577,13 +574,11 @@
 <body>
 
     <div class="container">
-        <!-- 標題 -->
         <div class="header">
             <h1>🎵 溫柔<span>音效板</span></h1>
             <div class="sub">點擊方塊播放 · 按一下重新開始</div>
         </div>
 
-        <!-- 工具列 -->
         <div class="toolbar">
             <div class="info">
                 📦 已使用 <strong id="countDisplay">0</strong> / 20 個
@@ -594,13 +589,15 @@
             </div>
         </div>
 
-        <!-- 音效網格 -->
         <div class="grid" id="gridContainer">
-            <!-- 由 JavaScript 動態渲染 -->
+            <div class="loading">
+                <div class="spinner">⏳</div>
+                <p>載入中⋯⋯</p>
+            </div>
         </div>
     </div>
 
-    <!-- ===== 彈出視窗 ===== -->
+    <!-- Modal -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
             <h2 id="modalTitle">➕ 新增音效</h2>
@@ -624,12 +621,9 @@
 
             <div class="form-group">
                 <label>🎨 選擇顏色</label>
-                <div class="color-picker" id="colorPicker">
-                    <!-- 由 JS 生成 -->
-                </div>
+                <div class="color-picker" id="colorPicker"></div>
             </div>
 
-            <!-- 預覽 -->
             <div class="preview-area" id="previewArea">
                 <div class="preview-icon" id="previewIcon">🎵</div>
                 <div class="preview-name" id="previewName">音效名稱</div>
@@ -650,30 +644,24 @@
             // 1. 設定
             // ============================================================
             const MAX_SOUNDS = 20;
-            const STORAGE_KEY = 'soundboard_data';
+            const DB_NAME = 'SoundboardDB';
+            const STORE_NAME = 'sounds';
+            const DB_VERSION = 1;
 
-            // 溫柔色系
             const COLOR_PALETTE = [
-                '#f5ede4', // 奶茶
-                '#e8ddd0', // 杏仁
-                '#dccfc0', // 燕麥
-                '#f0e8d8', // 米白
-                '#e8ddd8', // 粉灰
-                '#d8d0c8', // 冷灰
-                '#f0e0d8', // 淺粉
-                '#dcc8c0', // 粉棕
-                '#e0d4c8', // 卡其
-                '#c8c0b8', // 灰褐
+                '#f5ede4', '#e8ddd0', '#dccfc0', '#f0e8d8', '#e8ddd8',
+                '#d8d0c8', '#f0e0d8', '#dcc8c0', '#e0d4c8', '#c8c0b8',
             ];
 
-            // 預設圖片（文字 emoji）
             const DEFAULT_ICON = '🎵';
 
             // ============================================================
             // 2. 狀態
             // ============================================================
             let sounds = [];
-            let editingIndex = null; // null = 新增模式，數字 = 編輯模式
+            let editingIndex = null;
+            let db = null;
+            let isLoading = true;
 
             // ============================================================
             // 3. DOM 元素
@@ -695,59 +683,157 @@
             const modalConfirm = document.getElementById('modalConfirm');
 
             let selectedColor = COLOR_PALETTE[0];
-            let imageDataUrl = null; // 暫存圖片 base64
+            let imageDataUrl = null;
+            let tempAudioData = null; // 暫存音檔（編輯時不覆蓋）
 
             // ============================================================
-            // 4. 儲存 / 載入
+            // 4. IndexedDB 操作
             // ============================================================
-            function saveData() {
+
+            function openDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, DB_VERSION);
+                    request.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(STORE_NAME)) {
+                            db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                        }
+                    };
+                    request.onsuccess = function(e) {
+                        db = e.target.result;
+                        resolve(db);
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            function loadAllSounds() {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject(new Error('DB not open')); return; }
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.getAll();
+                    request.onsuccess = function() {
+                        resolve(request.result || []);
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            function saveSound(sound) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject(new Error('DB not open')); return; }
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.add(sound);
+                    request.onsuccess = function() {
+                        resolve(request.result);
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            function updateSound(id, data) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject(new Error('DB not open')); return; }
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.put({ ...data, id });
+                    request.onsuccess = function() {
+                        resolve();
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            function deleteSoundFromDB(id) {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject(new Error('DB not open')); return; }
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.delete(id);
+                    request.onsuccess = function() {
+                        resolve();
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            function clearAllSounds() {
+                return new Promise((resolve, reject) => {
+                    if (!db) { reject(new Error('DB not open')); return; }
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    const request = store.clear();
+                    request.onsuccess = function() {
+                        resolve();
+                    };
+                    request.onerror = function(e) {
+                        reject(e.target.error);
+                    };
+                });
+            }
+
+            // ============================================================
+            // 5. 載入與初始化
+            // ============================================================
+
+            async function init() {
                 try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(sounds));
+                    await openDB();
+                    const data = await loadAllSounds();
+                    sounds = data.map((item) => ({
+                        id: item.id,
+                        name: item.name || '未命名',
+                        audioData: item.audioData || null,
+                        image: item.image || null,
+                        color: item.color || COLOR_PALETTE[0],
+                    }));
+                    isLoading = false;
+                    render();
+                    initColorPicker();
+                    console.log(`🎵 音效板已載入，共 ${sounds.length} 個音效`);
                 } catch (e) {
-                    console.warn('儲存失敗（可能檔案過大）:', e);
+                    console.error('初始化失敗:', e);
+                    isLoading = false;
+                    grid.innerHTML = `
+                        <div class="empty-state" style="grid-column:1/-1;">
+                            <div class="icon">⚠️</div>
+                            <p>載入失敗：${e.message}</p>
+                        </div>
+                    `;
                 }
             }
 
-            function loadData() {
-                try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
-                    if (raw) {
-                        sounds = JSON.parse(raw);
-                        // 確保每個音效都有預設顏色
-                        sounds.forEach((s, idx) => {
-                            if (!s.color) {
-                                s.color = COLOR_PALETTE[idx % COLOR_PALETTE.length];
-                            }
-                            if (!s.image) {
-                                s.image = null;
-                            }
-                        });
-                        return true;
-                    }
-                } catch (e) {
-                    console.warn('讀取儲存失敗:', e);
-                }
-                return false;
-            }
+            // ============================================================
+            // 6. 渲染
+            // ============================================================
 
-            // ============================================================
-            // 5. 渲染
-            // ============================================================
             function render() {
+                if (isLoading) return;
+
                 const count = sounds.length;
                 countDisplay.textContent = count;
 
-                // 決定要顯示的項目：既有音效 + 一個「新增」按鈕（如果未滿）
                 const items = [];
-                sounds.forEach((sound, idx) => {
-                    items.push({ type: 'sound', data: sound, index: idx });
+                sounds.forEach((sound) => {
+                    items.push({ type: 'sound', data: sound });
                 });
                 if (count < MAX_SOUNDS) {
                     items.push({ type: 'add' });
                 }
 
                 if (items.length === 0) {
-                    // 完全空狀態
                     grid.innerHTML = `
                         <div class="empty-state" style="grid-column:1/-1;">
                             <div class="icon">🎵</div>
@@ -768,10 +854,8 @@
                         `;
                     } else {
                         const s = item.data;
-                        const idx = item.index;
-                        const color = s.color || COLOR_PALETTE[idx % COLOR_PALETTE.length];
+                        const color = s.color || COLOR_PALETTE[0];
 
-                        // 圖片處理
                         let imageHtml = '';
                         if (s.image && s.image.startsWith('data:image')) {
                             imageHtml = `<img src="${s.image}" alt="${s.name}" />`;
@@ -780,13 +864,13 @@
                         }
 
                         html += `
-                            <div class="sound-card" data-index="${idx}" style="border-color:${color}40;">
+                            <div class="sound-card" data-id="${s.id}" style="border-color:${color}40;">
                                 <div class="card-color" style="background:${color};"></div>
                                 <div class="card-image">${imageHtml}</div>
                                 <div class="card-name">${escapeHtml(s.name)}</div>
                                 <div class="card-actions">
-                                    <button class="btn-icon edit" data-index="${idx}" title="編輯名稱">✏️</button>
-                                    <button class="btn-icon delete" data-index="${idx}" title="刪除">✕</button>
+                                    <button class="btn-icon edit" data-id="${s.id}" title="編輯">✏️</button>
+                                    <button class="btn-icon delete" data-id="${s.id}" title="刪除">✕</button>
                                 </div>
                             </div>
                         `;
@@ -795,49 +879,43 @@
 
                 grid.innerHTML = html;
 
-                // 綁定事件（委託）
-                // 點擊方塊播放
+                // 綁定事件
                 grid.querySelectorAll('.sound-card:not(.add-card)').forEach(el => {
                     el.addEventListener('click', function(e) {
-                        // 如果點到的是按鈕，不觸發播放
                         if (e.target.closest('.card-actions')) return;
-                        const idx = parseInt(this.dataset.index);
-                        if (!isNaN(idx)) {
-                            playSound(idx);
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            playSound(id);
                         }
                     });
                 });
 
-                // 編輯按鈕
                 grid.querySelectorAll('.btn-icon.edit').forEach(btn => {
                     btn.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        const idx = parseInt(this.dataset.index);
-                        if (!isNaN(idx)) {
-                            openEditModal(idx);
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            openEditModal(id);
                         }
                     });
                 });
 
-                // 刪除按鈕
                 grid.querySelectorAll('.btn-icon.delete').forEach(btn => {
                     btn.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        const idx = parseInt(this.dataset.index);
-                        if (!isNaN(idx)) {
-                            deleteSound(idx);
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            deleteSound(id);
                         }
                     });
                 });
 
-                // 新增卡片
                 const addCard = document.getElementById('addCard');
                 if (addCard) {
                     addCard.addEventListener('click', openAddModal);
                 }
             }
 
-            // 簡單的跳脫
             function escapeHtml(text) {
                 const div = document.createElement('div');
                 div.textContent = text;
@@ -845,19 +923,19 @@
             }
 
             // ============================================================
-            // 6. 播放音效
+            // 7. 播放音效
             // ============================================================
+
             let currentAudio = null;
 
-            function playSound(index) {
-                const sound = sounds[index];
+            function playSound(id) {
+                const sound = sounds.find(s => s.id === id);
                 if (!sound || !sound.audioData) {
                     console.warn('音效資料不存在');
                     return;
                 }
 
                 try {
-                    // 如果已有播放中的音效，停止它
                     if (currentAudio) {
                         currentAudio.pause();
                         currentAudio.currentTime = 0;
@@ -865,29 +943,20 @@
 
                     const audio = new Audio(sound.audioData);
                     currentAudio = audio;
-
-                    audio.play().catch(e => {
-                        console.warn('播放失敗:', e);
-                    });
-
-                    // 播放完後釋放
+                    audio.play().catch(e => console.warn('播放失敗:', e));
                     audio.onended = function() {
-                        if (currentAudio === audio) {
-                            currentAudio = null;
-                        }
+                        if (currentAudio === audio) currentAudio = null;
                     };
-
                 } catch (e) {
                     console.warn('播放錯誤:', e);
                 }
             }
 
             // ============================================================
-            // 7. CRUD 操作
+            // 8. CRUD 操作
             // ============================================================
 
-            // 新增
-            function addSound(name, audioData, imageData, color) {
+            async function addSound(name, audioData, imageData, color) {
                 if (sounds.length >= MAX_SOUNDS) {
                     alert(`已達上限 ${MAX_SOUNDS} 個音效！`);
                     return false;
@@ -901,74 +970,104 @@
                     return false;
                 }
 
-                sounds.push({
-                    name: name.trim(),
-                    audioData: audioData,
-                    image: imageData || null,
-                    color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
-                });
+                try {
+                    const newId = await saveSound({
+                        name: name.trim(),
+                        audioData: audioData,
+                        image: imageData || null,
+                        color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
+                    });
 
-                saveData();
-                render();
-                return true;
+                    sounds.push({
+                        id: newId,
+                        name: name.trim(),
+                        audioData: audioData,
+                        image: imageData || null,
+                        color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
+                    });
+
+                    render();
+                    return true;
+                } catch (e) {
+                    console.error('儲存失敗:', e);
+                    alert('儲存失敗，請檢查瀏覽器空間是否足夠。');
+                    return false;
+                }
             }
 
-            // 編輯名稱
-            function editSound(index, newName, newImage, newColor) {
-                if (index < 0 || index >= sounds.length) return false;
+            async function editSound(id, newName, newImage, newColor) {
+                const idx = sounds.findIndex(s => s.id === id);
+                if (idx === -1) return false;
                 if (!newName.trim()) {
                     alert('請輸入音效名稱！');
                     return false;
                 }
 
-                sounds[index].name = newName.trim();
-                if (newImage !== undefined) {
-                    sounds[index].image = newImage;
-                }
-                if (newColor) {
-                    sounds[index].color = newColor;
-                }
+                try {
+                    const updated = {
+                        name: newName.trim(),
+                        audioData: sounds[idx].audioData,
+                        image: newImage !== undefined ? newImage : sounds[idx].image,
+                        color: newColor || sounds[idx].color,
+                    };
+                    await updateSound(id, updated);
 
-                saveData();
-                render();
-                return true;
+                    sounds[idx].name = newName.trim();
+                    if (newImage !== undefined) sounds[idx].image = newImage;
+                    if (newColor) sounds[idx].color = newColor;
+
+                    render();
+                    return true;
+                } catch (e) {
+                    console.error('更新失敗:', e);
+                    alert('更新失敗，請稍後再試。');
+                    return false;
+                }
             }
 
-            // 刪除
-            function deleteSound(index) {
-                if (index < 0 || index >= sounds.length) return;
-                if (!confirm(`確定要刪除「${sounds[index].name}」嗎？`)) return;
+            async function deleteSound(id) {
+                const sound = sounds.find(s => s.id === id);
+                if (!sound) return;
+                if (!confirm(`確定要刪除「${sound.name}」嗎？`)) return;
 
-                // 如果正在播放這個音效，停止
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio.currentTime = 0;
-                    currentAudio = null;
+                try {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                        currentAudio = null;
+                    }
+
+                    await deleteSoundFromDB(id);
+                    sounds = sounds.filter(s => s.id !== id);
+                    render();
+                } catch (e) {
+                    console.error('刪除失敗:', e);
+                    alert('刪除失敗，請稍後再試。');
                 }
-
-                sounds.splice(index, 1);
-                saveData();
-                render();
             }
 
-            // 清空全部
-            function clearAll() {
+            async function clearAll() {
                 if (sounds.length === 0) return;
                 if (!confirm('確定要刪除全部音效嗎？此操作無法復原！')) return;
 
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio.currentTime = 0;
-                    currentAudio = null;
-                }
+                try {
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                        currentAudio = null;
+                    }
 
-                sounds = [];
-                saveData();
-                render();
+                    await clearAllSounds();
+                    sounds = [];
+                    render();
+                } catch (e) {
+                    console.error('清空失敗:', e);
+                    alert('清空失敗，請稍後再試。');
+                }
             }
 
             // ============================================================
-            // 8. Modal 控制
+            // 9. Modal 控制
             // ============================================================
 
             function openModal(title, confirmText, callback) {
@@ -976,25 +1075,24 @@
                 modalConfirm.textContent = confirmText;
                 modalOverlay.classList.add('active');
 
-                // 清空表單
                 inputName.value = '';
                 inputAudio.value = '';
                 inputImage.value = '';
                 imageDataUrl = null;
+                tempAudioData = null;
                 selectedColor = COLOR_PALETTE[0];
                 updateColorPicker(selectedColor);
                 updatePreview('🎵', '音效名稱');
 
-                // 儲存 callback
                 modalConfirm._callback = callback;
             }
 
             function closeModal() {
                 modalOverlay.classList.remove('active');
                 editingIndex = null;
+                tempAudioData = null;
             }
 
-            // 開啟新增 Modal
             function openAddModal() {
                 editingIndex = null;
                 openModal('➕ 新增音效', '✓ 儲存', function() {
@@ -1005,11 +1103,9 @@
                     if (!name) { alert('請輸入音效名稱！'); return false; }
                     if (!audioFile) { alert('請上傳音效檔案！'); return false; }
 
-                    // 讀取音檔
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const audioData = e.target.result;
-                        // 讀取圖片（如果有）
                         let imagePromise = Promise.resolve(null);
                         if (imageFile) {
                             imagePromise = new Promise((resolve) => {
@@ -1031,26 +1127,24 @@
                 });
             }
 
-            // 開啟編輯 Modal（只編輯名稱、圖片、顏色，不更換音檔）
-            function openEditModal(index) {
-                const sound = sounds[index];
+            function openEditModal(id) {
+                const sound = sounds.find(s => s.id === id);
                 if (!sound) return;
 
-                editingIndex = index;
+                editingIndex = id;
                 inputName.value = sound.name;
-                selectedColor = sound.color || COLOR_PALETTE[index % COLOR_PALETTE.length];
+                selectedColor = sound.color || COLOR_PALETTE[0];
                 imageDataUrl = sound.image || null;
 
-                // 更新預覽
                 const iconHtml = sound.image && sound.image.startsWith('data:image') ?
                     `<img src="${sound.image}" />` :
                     DEFAULT_ICON;
                 updatePreview(iconHtml, sound.name);
                 updateColorPicker(selectedColor);
 
-                // 清空檔案上傳
                 inputAudio.value = '';
                 inputImage.value = '';
+                tempAudioData = null;
 
                 modalTitle.textContent = '✏️ 編輯音效';
                 modalConfirm.textContent = '✓ 更新';
@@ -1061,19 +1155,17 @@
                     const newName = inputName.value.trim();
                     if (!newName) { alert('請輸入音效名稱！'); return false; }
 
-                    // 如果有上傳新圖片，使用新圖片；否則保留原圖片
                     const imageFile = inputImage.files[0];
                     if (imageFile) {
                         const imgReader = new FileReader();
                         imgReader.onload = function(e) {
                             const newImage = e.target.result;
-                            editSound(index, newName, newImage, selectedColor);
+                            editSound(id, newName, newImage, selectedColor);
                             closeModal();
                         };
                         imgReader.readAsDataURL(imageFile);
                     } else {
-                        // 沒有新圖片，保留原圖或 null
-                        editSound(index, newName, sound.image, selectedColor);
+                        editSound(id, newName, sound.image, selectedColor);
                         closeModal();
                     }
                     return true;
@@ -1081,7 +1173,7 @@
             }
 
             // ============================================================
-            // 9. 顏色選擇器
+            // 10. 顏色選擇器
             // ============================================================
 
             function initColorPicker() {
@@ -1108,7 +1200,7 @@
             }
 
             // ============================================================
-            // 10. 預覽更新
+            // 11. 預覽更新
             // ============================================================
 
             function updatePreview(iconHtml, name) {
@@ -1122,7 +1214,6 @@
                 previewName.textContent = name || '音效名稱';
             }
 
-            // 監聽名稱輸入即時預覽
             inputName.addEventListener('input', function() {
                 const name = this.value.trim() || '音效名稱';
                 const iconHtml = imageDataUrl && imageDataUrl.startsWith('data:image') ?
@@ -1149,33 +1240,25 @@
             });
 
             // ============================================================
-            // 11. 事件綁定
+            // 12. 事件綁定
             // ============================================================
 
-            // 新增按鈕
             addBtn.addEventListener('click', openAddModal);
-
-            // 清空按鈕
             clearBtn.addEventListener('click', clearAll);
-
-            // Modal 取消
             modalCancel.addEventListener('click', closeModal);
 
-            // Modal 確認
             modalConfirm.addEventListener('click', function() {
                 const callback = this._callback;
                 if (callback) {
                     const result = callback();
-                    if (result === false) return; // 驗證失敗
+                    if (result === false) return;
                 }
             });
 
-            // 點擊遮罩關閉
             modalOverlay.addEventListener('click', function(e) {
                 if (e.target === this) closeModal();
             });
 
-            // 鍵盤快速鍵：ESC 關閉 Modal
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') closeModal();
                 if (e.key === 'Enter' && modalOverlay.classList.contains('active')) {
@@ -1188,179 +1271,10 @@
             });
 
             // ============================================================
-            // 12. 初始化
-            // ============================================================
-
-            function init() {
-                // 載入資料
-                const hasData = loadData();
-
-                // 如果沒有資料，加入預設範例
-                if (!hasData || sounds.length === 0) {
-                    // 加入 3 個範例音效（用 Web Audio 產生簡單音效）
-                    sounds = [];
-                    // 加入範例（使用合成音效）
-                    addSampleSound('🔔 叮噹', generateBellSound(), COLOR_PALETTE[0]);
-                    addSampleSound('👏 拍手', generateClapSound(), COLOR_PALETTE[2]);
-                    addSampleSound('🎵 和弦', generateChordSound(), COLOR_PALETTE[4]);
-                    saveData();
-                }
-
-                // 初始化顏色選擇器
-                initColorPicker();
-
-                // 渲染
-                render();
-
-                console.log('🎵 溫柔音效板已載入！');
-                console.log(`📦 目前有 ${sounds.length} 個音效`);
-            }
-
-            // 產生範例音效（合成）
-            function generateBellSound() {
-                try {
-                    const ctx = new(window.AudioContext || window.webkitAudioContext)();
-                    const duration = 0.6;
-                    const sampleRate = ctx.sampleRate;
-                    const length = Math.floor(sampleRate * duration);
-                    const buffer = ctx.createBuffer(1, length, sampleRate);
-                    const data = buffer.getChannelData(0);
-
-                    for (let i = 0; i < length; i++) {
-                        const t = i / sampleRate;
-                        const freq = 800 + 200 * Math.sin(t * 6);
-                        const env = Math.exp(-t * 4);
-                        data[i] = Math.sin(t * freq * 2 * Math.PI) * env * 0.5;
-                    }
-
-                    const blob = new Blob([bufferToWav(buffer)], { type: 'audio/wav' });
-                    return URL.createObjectURL(blob);
-                } catch (e) {
-                    console.warn('無法生成範例音效:', e);
-                    return null;
-                }
-            }
-
-            function generateClapSound() {
-                try {
-                    const ctx = new(window.AudioContext || window.webkitAudioContext)();
-                    const duration = 0.15;
-                    const sampleRate = ctx.sampleRate;
-                    const length = Math.floor(sampleRate * duration);
-                    const buffer = ctx.createBuffer(1, length, sampleRate);
-                    const data = buffer.getChannelData(0);
-
-                    for (let i = 0; i < length; i++) {
-                        const noise = (Math.random() * 2 - 1);
-                        const env = Math.exp(-i / (sampleRate * 0.03));
-                        data[i] = noise * env * 0.6;
-                    }
-
-                    const blob = new Blob([bufferToWav(buffer)], { type: 'audio/wav' });
-                    return URL.createObjectURL(blob);
-                } catch (e) {
-                    console.warn('無法生成範例音效:', e);
-                    return null;
-                }
-            }
-
-            function generateChordSound() {
-                try {
-                    const ctx = new(window.AudioContext || window.webkitAudioContext)();
-                    const duration = 0.8;
-                    const sampleRate = ctx.sampleRate;
-                    const length = Math.floor(sampleRate * duration);
-                    const buffer = ctx.createBuffer(1, length, sampleRate);
-                    const data = buffer.getChannelData(0);
-
-                    const freqs = [523, 659, 784];
-                    for (let i = 0; i < length; i++) {
-                        const t = i / sampleRate;
-                        let val = 0;
-                        freqs.forEach((f, idx) => {
-                            const amp = 0.3 / (idx + 1);
-                            const env = Math.exp(-t * 3);
-                            val += Math.sin(t * f * 2 * Math.PI) * amp * env;
-                        });
-                        data[i] = val * 0.6;
-                    }
-
-                    const blob = new Blob([bufferToWav(buffer)], { type: 'audio/wav' });
-                    return URL.createObjectURL(blob);
-                } catch (e) {
-                    console.warn('無法生成範例音效:', e);
-                    return null;
-                }
-            }
-
-            function bufferToWav(buffer) {
-                const numChannels = buffer.numberOfChannels;
-                const sampleRate = buffer.sampleRate;
-                const format = 1;
-                const bitDepth = 16;
-                const samples = buffer.getChannelData(0);
-                const dataLength = samples.length * 2;
-                const headerLength = 44;
-                const totalLength = headerLength + dataLength;
-
-                const arrayBuffer = new ArrayBuffer(totalLength);
-                const view = new DataView(arrayBuffer);
-
-                const writeString = (offset, str) => {
-                    for (let i = 0; i < str.length; i++) {
-                        view.setUint8(offset + i, str.charCodeAt(i));
-                    }
-                };
-
-                writeString(0, 'RIFF');
-                view.setUint32(4, totalLength - 8, true);
-                writeString(8, 'WAVE');
-                writeString(12, 'fmt ');
-                view.setUint32(16, 16, true);
-                view.setUint16(20, format, true);
-                view.setUint16(22, numChannels, true);
-                view.setUint32(24, sampleRate, true);
-                view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
-                view.setUint16(32, numChannels * (bitDepth / 8), true);
-                view.setUint16(34, bitDepth, true);
-                writeString(36, 'data');
-                view.setUint32(40, dataLength, true);
-
-                const offset = 44;
-                for (let i = 0; i < samples.length; i++) {
-                    const sample = Math.max(-1, Math.min(1, samples[i]));
-                    const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-                    view.setInt16(offset + i * 2, int16, true);
-                }
-
-                return arrayBuffer;
-            }
-
-            function addSampleSound(name, audioData, color) {
-                if (audioData) {
-                    sounds.push({
-                        name: name,
-                        audioData: audioData,
-                        image: null,
-                        color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
-                    });
-                }
-            }
-
-            // ============================================================
             // 13. 啟動
             // ============================================================
 
             init();
-
-            // 處理頁面關閉前清理 URL（釋放記憶體）
-            window.addEventListener('beforeunload', function() {
-                sounds.forEach(s => {
-                    if (s.audioData && s.audioData.startsWith('blob:')) {
-                        URL.revokeObjectURL(s.audioData);
-                    }
-                });
-            });
 
         })();
     </script>
