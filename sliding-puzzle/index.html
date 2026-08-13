@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🪵 數字華容道</title>
+    <style>
+        /* ===== 全域 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: #e8ddd0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-image:
+                radial-gradient(ellipse at 30% 20%, rgba(200, 170, 140, 0.2) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(200, 170, 140, 0.15) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 540px;
+            width: 100%;
+            background: #dccfc0;
+            border-radius: 32px;
+            padding: 24px 20px 28px 20px;
+            box-shadow:
+                0 20px 60px rgba(100, 70, 40, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(180, 150, 120, 0.2);
+            position: relative;
+            min-height: 400px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 4px;
+        }
+
+        .header .title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #6a4a3a;
+            letter-spacing: 2px;
+        }
+
+        .header .title span {
+            color: #a0806a;
+            font-weight: 300;
+        }
+
+        .header .title .size-badge {
+            font-size: 14px;
+            background: rgba(160, 130, 110, 0.15);
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+            font-weight: 500;
+            color: #8a7a6a;
+        }
+
+        .header .timer {
+            font-size: 18px;
+            font-weight: 500;
+            color: #6a4a3a;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 1px;
+            background: rgba(255, 248, 242, 0.3);
+            padding: 4px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(180, 150, 120, 0.1);
+        }
+
+        /* ===== 選單畫面 ===== */
+        #menuScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px 10px 10px;
+            min-height: 320px;
+        }
+
+        #menuScreen .menu-icon {
+            font-size: 52px;
+            margin-bottom: 8px;
+        }
+
+        #menuScreen .menu-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #6a4a3a;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        #menuScreen .menu-sub {
+            font-size: 14px;
+            color: #8a7a6a;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        #menuScreen .menu-best {
+            font-size: 13px;
+            color: #8a7a6a;
+            margin-bottom: 16px;
+            text-align: center;
+            line-height: 1.8;
+        }
+
+        #menuScreen .menu-best strong {
+            color: #6a4a3a;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .menu-buttons .btn-size {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            letter-spacing: 1px;
+            background: #c8b09a;
+            color: #f5ede4;
+            box-shadow: 0 4px 0 #8a7a6a;
+            min-width: 70px;
+        }
+
+        .menu-buttons .btn-size:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #8a7a6a;
+        }
+
+        .menu-buttons .btn-size:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #8a7a6a;
+        }
+
+        .menu-buttons .btn-size .sub {
+            display: block;
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .menu-buttons .btn-size .best-record {
+            display: block;
+            font-size: 10px;
+            font-weight: 400;
+            opacity: 0.5;
+            margin-top: 2px;
+            color: #f5ede4;
+        }
+
+        /* ===== 遊戲中 ===== */
+        #gameScreen {
+            display: none;
+        }
+
+        .intro-hint {
+            text-align: center;
+            font-size: 14px;
+            color: #8a7a6a;
+            letter-spacing: 1px;
+            padding: 6px 0 12px 0;
+            opacity: 0.7;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro-hint.hidden {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .board-container {
+            position: relative;
+            background: #c8b8a8;
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow:
+                inset 0 4px 20px rgba(0, 0, 0, 0.08),
+                0 8px 32px rgba(0, 0, 0, 0.04);
+            border: 2px solid #b8a898;
+        }
+
+        .board-container::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            border-radius: 16px;
+            background:
+                repeating-linear-gradient(90deg,
+                    transparent 0px,
+                    rgba(180, 150, 120, 0.03) 2px,
+                    transparent 4px,
+                    transparent 20px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .board {
+            display: grid;
+            gap: 8px;
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+
+        .board.size-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .board.size-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .board.size-5 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .board.size-6 {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .cell {
+            background: #f0e8dc;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #5a3a2a;
+            cursor: pointer;
+            transition: all 0.12s ease;
+            box-shadow:
+                inset 0 -3px 0 rgba(160, 130, 110, 0.15),
+                0 2px 12px rgba(0, 0, 0, 0.02);
+            aspect-ratio: 1 / 1;
+            position: relative;
+            border: 1px solid rgba(200, 180, 160, 0.1);
+            font-size: 32px;
+        }
+
+        .cell.size-4-cell {
+            font-size: 26px;
+        }
+        .cell.size-5-cell {
+            font-size: 20px;
+        }
+        .cell.size-6-cell {
+            font-size: 16px;
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 14px;
+            background:
+                repeating-linear-gradient(90deg,
+                    transparent 0px,
+                    rgba(200, 180, 160, 0.04) 1px,
+                    transparent 2px,
+                    transparent 12px);
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .cell:active {
+            transform: scale(0.94);
+            background: #e8ddd0;
+        }
+
+        .cell.empty {
+            background: transparent;
+            box-shadow: none;
+            cursor: default;
+            border: 1px dashed rgba(160, 130, 110, 0.08);
+        }
+
+        .cell.empty:active {
+            transform: none;
+            background: transparent;
+        }
+
+        /* 數字顏色 */
+        .cell[data-value="1"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="2"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="3"] {
+            color: #8a6a5a;
+        }
+        .cell[data-value="4"] {
+            color: #7a4a3a;
+        }
+        .cell[data-value="5"] {
+            color: #8a5a4a;
+        }
+        .cell[data-value="6"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="7"] {
+            color: #8a6a4a;
+        }
+        .cell[data-value="8"] {
+            color: #7a5a3a;
+        }
+        .cell[data-value="9"] {
+            color: #6a5a4a;
+        }
+        .cell[data-value="10"] {
+            color: #8a6a5a;
+        }
+        .cell[data-value="11"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="12"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="13"] {
+            color: #8a5a4a;
+        }
+        .cell[data-value="14"] {
+            color: #7a4a3a;
+        }
+        .cell[data-value="15"] {
+            color: #6a5a3a;
+        }
+        .cell[data-value="16"] {
+            color: #8a6a4a;
+        }
+        .cell[data-value="17"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="18"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="19"] {
+            color: #8a5a4a;
+        }
+        .cell[data-value="20"] {
+            color: #7a4a3a;
+        }
+        .cell[data-value="21"] {
+            color: #6a5a4a;
+        }
+        .cell[data-value="22"] {
+            color: #8a6a5a;
+        }
+        .cell[data-value="23"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="24"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="25"] {
+            color: #8a6a4a;
+        }
+        .cell[data-value="26"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="27"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="28"] {
+            color: #8a5a4a;
+        }
+        .cell[data-value="29"] {
+            color: #7a4a3a;
+        }
+        .cell[data-value="30"] {
+            color: #6a5a4a;
+        }
+        .cell[data-value="31"] {
+            color: #8a6a5a;
+        }
+        .cell[data-value="32"] {
+            color: #7a5a4a;
+        }
+        .cell[data-value="33"] {
+            color: #6a4a3a;
+        }
+        .cell[data-value="34"] {
+            color: #8a6a4a;
+        }
+        .cell[data-value="35"] {
+            color: #7a5a3a;
+        }
+
+        .cell.sliding {
+            animation: slideIn 0.15s ease-out;
+        }
+
+        @keyframes slideIn {
+            0% {
+                transform: scale(0.85);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+            padding: 0 4px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footer .info {
+            font-size: 13px;
+            color: #8a7a6a;
+            letter-spacing: 0.5px;
+            flex: 1;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            letter-spacing: 1px;
+            background: #b8a898;
+            color: #f5ede4;
+            box-shadow: 0 4px 0 #8a7a6a;
+            flex-shrink: 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #8a7a6a;
+        }
+
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #8a7a6a;
+        }
+
+        .btn-primary {
+            background: #c8b09a;
+            color: #f5ede4;
+            box-shadow: 0 4px 0 #8a7a6a;
+        }
+
+        .btn-primary:hover {
+            background: #d4bca6;
+        }
+
+        .btn-secondary {
+            background: #b8a898;
+            box-shadow: 0 4px 0 #8a7a6a;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* ===== 勝利彈窗 ===== */
+        .win-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(220, 200, 180, 0.88);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            flex-direction: column;
+            gap: 10px;
+            padding: 24px;
+        }
+
+        .win-overlay.show {
+            display: flex;
+        }
+
+        .win-overlay .win-icon {
+            font-size: 44px;
+        }
+
+        .win-overlay .win-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #5a3a2a;
+            letter-spacing: 2px;
+        }
+
+        .win-overlay .win-time {
+            font-size: 17px;
+            color: #6a4a3a;
+        }
+
+        .win-overlay .win-time strong {
+            font-size: 22px;
+            color: #5a3a2a;
+        }
+
+        .win-overlay .win-best {
+            font-size: 14px;
+            color: #8a7a6a;
+            margin-bottom: 2px;
+        }
+
+        .win-overlay .win-best strong {
+            color: #5a3a2a;
+            font-size: 17px;
+        }
+
+        .win-overlay .win-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .win-overlay .win-buttons .btn {
+            padding: 10px 28px;
+            font-size: 15px;
+            min-width: 100px;
+        }
+
+        /* ===== 手機 6×6 提示 ===== */
+        .size-warning {
+            display: none;
+            font-size: 12px;
+            color: #b09a86;
+            text-align: center;
+            margin-top: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .size-warning.show {
+            display: block;
+        }
+
+        /* ===== 響應式 ===== */
+        @media (max-width: 540px) {
+            .container {
+                padding: 16px 14px 20px 14px;
+                border-radius: 24px;
+            }
+            .header .title {
+                font-size: 18px;
+            }
+            .header .timer {
+                font-size: 15px;
+                padding: 3px 12px;
+            }
+            .board-container {
+                padding: 8px;
+                border-radius: 16px;
+            }
+            .board {
+                gap: 6px;
+            }
+            .cell {
+                border-radius: 10px;
+                font-size: 26px;
+            }
+            .cell.size-4-cell {
+                font-size: 20px;
+            }
+            .cell.size-5-cell {
+                font-size: 16px;
+            }
+            .cell.size-6-cell {
+                font-size: 13px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+            .win-overlay .win-title {
+                font-size: 20px;
+            }
+            .win-overlay .win-time {
+                font-size: 15px;
+            }
+            .win-overlay .win-time strong {
+                font-size: 20px;
+            }
+            .win-overlay .win-buttons .btn {
+                padding: 8px 20px;
+                font-size: 13px;
+                min-width: 80px;
+            }
+            .footer {
+                justify-content: center;
+            }
+            .footer .info {
+                text-align: center;
+                flex: 1 1 100%;
+            }
+            .menu-buttons .btn-size {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-width: 60px;
+            }
+            #menuScreen .menu-title {
+                font-size: 19px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .board {
+                gap: 4px;
+            }
+            .board-container {
+                padding: 6px;
+            }
+            .cell {
+                border-radius: 8px;
+                font-size: 20px;
+            }
+            .cell.size-4-cell {
+                font-size: 16px;
+            }
+            .cell.size-5-cell {
+                font-size: 13px;
+            }
+            .cell.size-6-cell {
+                font-size: 11px;
+            }
+            .header .title {
+                font-size: 16px;
+            }
+            .header .timer {
+                font-size: 13px;
+                padding: 2px 10px;
+            }
+            .menu-buttons .btn-size {
+                padding: 8px 14px;
+                font-size: 12px;
+                min-width: 50px;
+            }
+            .menu-buttons .btn-size .sub {
+                font-size: 9px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ===== 標題 + 計時器 ===== -->
+        <div class="header">
+            <div class="title">
+                🪵 華容<span>道</span>
+                <span class="size-badge" id="sizeBadge">選單</span>
+            </div>
+            <div class="timer" id="timerDisplay">00:00</div>
+        </div>
+
+        <!-- ===== 選單畫面 ===== -->
+        <div id="menuScreen">
+            <div class="menu-icon">🧩</div>
+            <div class="menu-title">選擇難度</div>
+            <div class="menu-sub">選一個尺寸開始挑戰</div>
+            <div class="menu-best" id="menuBest">
+                🏆 3×3：<strong id="best3">--:--</strong> ｜
+                4×4：<strong id="best4">--:--</strong> ｜
+                5×5：<strong id="best5">--:--</strong> ｜
+                6×6：<strong id="best6">--:--</strong>
+            </div>
+            <div class="menu-buttons">
+                <button class="btn-size" data-size="3">
+                    3×3
+                    <span class="sub">簡單</span>
+                    <span class="best-record" id="menuBest3"></span>
+                </button>
+                <button class="btn-size" data-size="4">
+                    4×4
+                    <span class="sub">中等</span>
+                    <span class="best-record" id="menuBest4"></span>
+                </button>
+                <button class="btn-size" data-size="5">
+                    5×5
+                    <span class="sub">困難</span>
+                    <span class="best-record" id="menuBest5"></span>
+                </button>
+                <button class="btn-size" data-size="6">
+                    6×6
+                    <span class="sub">挑戰</span>
+                    <span class="best-record" id="menuBest6"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 遊戲畫面 ===== -->
+        <div id="gameScreen">
+            <div class="intro-hint" id="introHint">👆 點擊數字，整行／整列一起移動</div>
+            <div class="size-warning" id="sizeWarning">💡 6×6 建議使用電腦遊玩，手機上格子較小</div>
+
+            <div class="board-container">
+                <div class="board size-3" id="board">
+                    <!-- 由 JavaScript 動態生成 -->
+                </div>
+            </div>
+
+            <div class="footer">
+                <span class="info" id="infoText">🔀 點擊數字移動它</span>
+                <button class="btn btn-secondary btn-small" id="shuffleBtn">🔀 重新打亂</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            // 1. 設定
+            // ============================================================
+
+            const SIZES = [3, 4, 5, 6];
+            let currentSize = 3;
+
+            // ============================================================
+            // 2. 狀態
+            // ============================================================
+
+            let grid = [];
+            let timerInterval = null;
+            let seconds = 0;
+            let isGameStarted = false;
+            let isGameFinished = false;
+            let isShuffling = false;
+
+            let bestTimes = {
+                3: localStorage.getItem('bestTime_3x3') || null,
+                4: localStorage.getItem('bestTime_4x4') || null,
+                5: localStorage.getItem('bestTime_5x5') || null,
+                6: localStorage.getItem('bestTime_6x6') || null,
+            };
+
+            // ============================================================
+            // 3. DOM 元素
+            // ============================================================
+
+            const menuScreen = document.getElementById('menuScreen');
+            const gameScreen = document.getElementById('gameScreen');
+            const sizeBadge = document.getElementById('sizeBadge');
+            const sizeWarning = document.getElementById('sizeWarning');
+
+            const board = document.getElementById('board');
+            const timerDisplay = document.getElementById('timerDisplay');
+            const introHint = document.getElementById('introHint');
+            const infoText = document.getElementById('infoText');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+
+            const best3 = document.getElementById('best3');
+            const best4 = document.getElementById('best4');
+            const best5 = document.getElementById('best5');
+            const best6 = document.getElementById('best6');
+            const menuBest3 = document.getElementById('menuBest3');
+            const menuBest4 = document.getElementById('menuBest4');
+            const menuBest5 = document.getElementById('menuBest5');
+            const menuBest6 = document.getElementById('menuBest6');
+
+            // ============================================================
+            // 4. 工具函數
+            // ============================================================
+
+            function getTotal() { return currentSize * currentSize; }
+
+            function getWinState() {
+                const total = getTotal();
+                const arr = [];
+                for (let i = 1; i < total; i++) arr.push(i);
+                arr.push(0);
+                return arr;
+            }
+
+            function findEmpty(grid) {
+                for (let i = 0; i < grid.length; i++) {
+                    if (grid[i] === 0) return i;
+                }
+                return -1;
+            }
+
+            function getRowCol(index, size) {
+                return { row: Math.floor(index / size), col: index % size };
+            }
+
+            function getIndex(row, col, size) {
+                return row * size + col;
+            }
+
+            function isWin(grid) {
+                const win = getWinState();
+                for (let i = 0; i < grid.length; i++) {
+                    if (grid[i] !== win[i]) return false;
+                }
+                return true;
+            }
+
+            function formatTime(sec) {
+                const m = String(Math.floor(sec / 60)).padStart(2, '0');
+                const s = String(sec % 60).padStart(2, '0');
+                return m + ':' + s;
+            }
+
+            function getBestTime() { return bestTimes[currentSize] || null; }
+
+            function setBestTime(val) {
+                bestTimes[currentSize] = val;
+                localStorage.setItem('bestTime_' + currentSize + 'x' + currentSize, val);
+            }
+
+            function formatBest(val) {
+                return val ? formatTime(parseInt(val)) : '--:--';
+            }
+
+            // ============================================================
+            // 5. 核心移動邏輯
+            // ============================================================
+
+            function canMove(grid, index) {
+                const size = currentSize;
+                const empty = findEmpty(grid);
+                if (empty === -1) return false;
+                const { row: er, col: ec } = getRowCol(empty, size);
+                const { row: ir, col: ic } = getRowCol(index, size);
+                return (er === ir || ec === ic);
+            }
+
+            function doMove(grid, index) {
+                const size = currentSize;
+                const empty = findEmpty(grid);
+                if (empty === -1) return false;
+                if (!canMove(grid, index)) return false;
+
+                const { row: er, col: ec } = getRowCol(empty, size);
+                const { row: ir, col: ic } = getRowCol(index, size);
+
+                if (er === ir) {
+                    const row = er;
+                    const start = Math.min(ec, ic);
+                    const end = Math.max(ec, ic);
+                    const segment = [];
+                    for (let c = start; c <= end; c++) {
+                        segment.push(grid[getIndex(row, c, size)]);
+                    }
+                    if (ec < ic) {
+                        for (let c = start; c < end; c++) {
+                            grid[getIndex(row, c, size)] = segment[c - start + 1];
+                        }
+                        grid[getIndex(row, end, size)] = 0;
+                    } else {
+                        for (let c = end; c > start; c--) {
+                            grid[getIndex(row, c, size)] = segment[c - start - 1];
+                        }
+                        grid[getIndex(row, start, size)] = 0;
+                    }
+                    return true;
+                }
+
+                if (ec === ic) {
+                    const col = ec;
+                    const start = Math.min(er, ir);
+                    const end = Math.max(er, ir);
+                    const segment = [];
+                    for (let r = start; r <= end; r++) {
+                        segment.push(grid[getIndex(r, col, size)]);
+                    }
+                    if (er < ir) {
+                        for (let r = start; r < end; r++) {
+                            grid[getIndex(r, col, size)] = segment[r - start + 1];
+                        }
+                        grid[getIndex(end, col, size)] = 0;
+                    } else {
+                        for (let r = end; r > start; r--) {
+                            grid[getIndex(r, col, size)] = segment[r - start - 1];
+                        }
+                        grid[getIndex(start, col, size)] = 0;
+                    }
+                    return true;
+                }
+
+                return false;
+            }
+
+            // ============================================================
+            // 6. 渲染
+            // ============================================================
+
+            function render() {
+                const size = currentSize;
+                const total = getTotal();
+
+                board.className = 'board size-' + size;
+
+                board.innerHTML = '';
+
+                const overlay = document.createElement('div');
+                overlay.className = 'win-overlay' + (isGameFinished ? ' show' : '');
+                overlay.id = 'winOverlay';
+                const best = getBestTime();
+                overlay.innerHTML = `
+                    <div class="win-icon">🎉</div>
+                    <div class="win-title">拼圖完成！</div>
+                    <div class="win-time">⏱️ 花費時間 <strong>${formatTime(seconds)}</strong></div>
+                    <div class="win-best">🏆 最快紀錄 <strong>${formatBest(best)}</strong></div>
+                    <div class="win-buttons">
+                        <button class="btn btn-primary" id="playAgainBtn">🔄 再來一次</button>
+                        <button class="btn btn-secondary" id="menuBtn">📐 重選格式</button>
+                    </div>
+                `;
+                board.appendChild(overlay);
+
+                document.getElementById('playAgainBtn')?.addEventListener('click', shufflePuzzle);
+                document.getElementById('menuBtn')?.addEventListener('click', goToMenu);
+
+                let cellClass = '';
+                if (size === 4) cellClass = 'size-4-cell';
+                else if (size === 5) cellClass = 'size-5-cell';
+                else if (size === 6) cellClass = 'size-6-cell';
+
+                for (let i = 0; i < total; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell ' + cellClass;
+                    if (grid[i] === 0) {
+                        cell.classList.add('empty');
+                    } else {
+                        cell.textContent = grid[i];
+                        cell.dataset.value = grid[i];
+                        cell.dataset.index = i;
+                        cell.addEventListener('click', function() {
+                            const idx = parseInt(this.dataset.index);
+                            handleCellClick(idx);
+                        });
+                        cell.addEventListener('touchstart', function(e) {
+                            e.preventDefault();
+                            const idx = parseInt(this.dataset.index);
+                            handleCellClick(idx);
+                        }, { passive: false });
+                    }
+                    board.appendChild(cell);
+                }
+
+                sizeBadge.textContent = size + '×' + size;
+                infoText.textContent = '🔀 ' + size + '×' + size + ' · 點擊數字移動';
+
+                // 6×6 顯示提示
+                if (size === 6) {
+                    sizeWarning.classList.add('show');
+                } else {
+                    sizeWarning.classList.remove('show');
+                }
+            }
+
+            // ============================================================
+            // 7. 點擊處理
+            // ============================================================
+
+            function handleCellClick(index) {
+                if (isGameFinished) return;
+                if (isShuffling) return;
+                if (grid[index] === 0) return;
+                if (!canMove(grid, index)) return;
+
+                if (!isGameStarted) {
+                    isGameStarted = true;
+                    startTimer();
+                    introHint.classList.add('hidden');
+                }
+
+                doMove(grid, index);
+
+                if (isWin(grid)) {
+                    isGameFinished = true;
+                    stopTimer();
+                    const best = getBestTime();
+                    if (best === null || seconds < parseInt(best)) {
+                        setBestTime(String(seconds));
+                        updateMenuBest();
+                    }
+                }
+
+                render();
+            }
+
+            // ============================================================
+            // 8. 計時器
+            // ============================================================
+
+            function startTimer() {
+                if (timerInterval) return;
+                seconds = 0;
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    timerDisplay.textContent = formatTime(seconds);
+                }, 1000);
+            }
+
+            function stopTimer() {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }
+
+            function resetTimer() {
+                stopTimer();
+                seconds = 0;
+                timerDisplay.textContent = '00:00';
+                isGameStarted = false;
+                introHint.classList.remove('hidden');
+            }
+
+            // ============================================================
+            // 9. 打亂
+            // ============================================================
+
+            function shufflePuzzle() {
+                if (isShuffling) return;
+
+                isShuffling = true;
+                isGameFinished = false;
+                isGameStarted = false;
+
+                const size = currentSize;
+                const total = getTotal();
+                const win = getWinState();
+                grid = [...win];
+
+                let steps;
+                if (size === 3) steps = 30 + Math.floor(Math.random() * 50);
+                else if (size === 4) steps = 60 + Math.floor(Math.random() * 80);
+                else if (size === 5) steps = 100 + Math.floor(Math.random() * 120);
+                else steps = 150 + Math.floor(Math.random() * 150);
+
+                let validMoves = 0;
+                for (let i = 0; i < steps * 5; i++) {
+                    if (validMoves >= steps) break;
+                    const empty = findEmpty(grid);
+                    const { row, col } = getRowCol(empty, size);
+                    const dirs = [];
+                    if (row > 0) dirs.push('up');
+                    if (row < size - 1) dirs.push('down');
+                    if (col > 0) dirs.push('left');
+                    if (col < size - 1) dirs.push('right');
+                    if (dirs.length === 0) break;
+                    const dir = dirs[Math.floor(Math.random() * dirs.length)];
+                    let targetR = row,
+                        targetC = col;
+                    if (dir === 'up') targetR--;
+                    if (dir === 'down') targetR++;
+                    if (dir === 'left') targetC--;
+                    if (dir === 'right') targetC++;
+                    const target = getIndex(targetR, targetC, size);
+                    [grid[empty], grid[target]] = [grid[target], grid[empty]];
+                    validMoves++;
+                }
+
+                if (isWin(grid)) {
+                    for (let i = 0; i < 60; i++) {
+                        const empty = findEmpty(grid);
+                        const { row, col } = getRowCol(empty, size);
+                        const dirs = [];
+                        if (row > 0) dirs.push('up');
+                        if (row < size - 1) dirs.push('down');
+                        if (col > 0) dirs.push('left');
+                        if (col < size - 1) dirs.push('right');
+                        if (dirs.length === 0) break;
+                        const dir = dirs[Math.floor(Math.random() * dirs.length)];
+                        let targetR = row,
+                            targetC = col;
+                        if (dir === 'up') targetR--;
+                        if (dir === 'down') targetR++;
+                        if (dir === 'left') targetC--;
+                        if (dir === 'right') targetC++;
+                        const target = getIndex(targetR, targetC, size);
+                        [grid[empty], grid[target]] = [grid[target], grid[empty]];
+                    }
+                }
+
+                resetTimer();
+                render();
+                isShuffling = false;
+            }
+
+            // ============================================================
+            // 10. 選單 / 遊戲 切換
+            // ============================================================
+
+            function goToMenu() {
+                stopTimer();
+                isGameFinished = false;
+                isGameStarted = false;
+                gameScreen.style.display = 'none';
+                menuScreen.style.display = 'flex';
+                sizeBadge.textContent = '選單';
+                updateMenuBest();
+            }
+
+            function startGame(size) {
+                currentSize = size;
+                menuScreen.style.display = 'none';
+                gameScreen.style.display = 'block';
+                sizeBadge.textContent = size + '×' + size;
+                shufflePuzzle();
+            }
+
+            // ============================================================
+            // 11. 更新選單最快紀錄
+            // ============================================================
+
+            function updateMenuBest() {
+                best3.textContent = formatBest(bestTimes[3]);
+                best4.textContent = formatBest(bestTimes[4]);
+                best5.textContent = formatBest(bestTimes[5]);
+                best6.textContent = formatBest(bestTimes[6]);
+
+                menuBest3.textContent = bestTimes[3] ? '🏆 ' + formatBest(bestTimes[3]) : '';
+                menuBest4.textContent = bestTimes[4] ? '🏆 ' + formatBest(bestTimes[4]) : '';
+                menuBest5.textContent = bestTimes[5] ? '🏆 ' + formatBest(bestTimes[5]) : '';
+                menuBest6.textContent = bestTimes[6] ? '🏆 ' + formatBest(bestTimes[6]) : '';
+            }
+
+            // ============================================================
+            // 12. 鍵盤控制
+            // ============================================================
+
+            document.addEventListener('keydown', function(e) {
+                const key = e.key;
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) {
+                    e.preventDefault();
+                    if (gameScreen.style.display === 'none') return;
+                    if (isGameFinished || isShuffling) return;
+
+                    const size = currentSize;
+                    const empty = findEmpty(grid);
+                    if (empty === -1) return;
+                    const { row, col } = getRowCol(empty, size);
+                    let targetR = row,
+                        targetC = col;
+                    if (key === 'ArrowUp') targetR++;
+                    if (key === 'ArrowDown') targetR--;
+                    if (key === 'ArrowLeft') targetC++;
+                    if (key === 'ArrowRight') targetC--;
+                    if (targetR < 0 || targetR >= size || targetC < 0 || targetC >= size) return;
+
+                    const target = getIndex(targetR, targetC, size);
+                    handleCellClick(target);
+                }
+            });
+
+            // ============================================================
+            // 13. 初始化
+            // ============================================================
+
+            function init() {
+                document.querySelectorAll('.btn-size').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const size = parseInt(this.dataset.size);
+                        startGame(size);
+                    });
+                });
+
+                shuffleBtn.addEventListener('click', shufflePuzzle);
+
+                updateMenuBest();
+
+                menuScreen.style.display = 'flex';
+                gameScreen.style.display = 'none';
+                sizeBadge.textContent = '選單';
+
+                console.log('🪵 華容道已載入！（3×3 / 4×4 / 5×5 / 6×6）');
+                console.log('🏆 3×3 最快：' + formatBest(bestTimes[3]));
+                console.log('🏆 4×4 最快：' + formatBest(bestTimes[4]));
+                console.log('🏆 5×5 最快：' + formatBest(bestTimes[5]));
+                console.log('🏆 6×6 最快：' + formatBest(bestTimes[6]));
+            }
+
+            if (document.readyState === 'complete') init();
+            else window.addEventListener('load', init);
+
+        })();
+    </script>
+</body>
+</html>
