@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>📱 安裝到手機桌面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(145deg, #f7f0e6 0%, #e8ddd0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 550px;
+            width: 100%;
+            background: rgba(255, 248, 240, 0.85);
+            backdrop-filter: blur(4px);
+            border-radius: 48px;
+            padding: 36px 32px 40px 32px;
+            box-shadow: 0 20px 40px rgba(100, 70, 40, 0.2);
+            border: 1px solid rgba(255, 235, 210, 0.5);
+            text-align: center;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #8a7a6a;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #5a4a3a;
+        }
+
+        h1 {
+            font-size: 26px;
+            color: #4a3a2a;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: #8a7a6a;
+            font-size: 14px;
+            border-bottom: 1px dashed #dccfc0;
+            padding-bottom: 18px;
+            margin-bottom: 24px;
+        }
+
+        .device-section {
+            background: #fcf8f2;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: left;
+            border: 1px solid rgba(200, 180, 160, 0.1);
+        }
+
+        .device-section .device-icon {
+            font-size: 28px;
+            margin-right: 10px;
+        }
+
+        .device-section .device-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4a3a2a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(200, 180, 160, 0.05);
+        }
+
+        .step:last-child {
+            border-bottom: none;
+        }
+
+        .step-num {
+            width: 24px;
+            height: 24px;
+            background: #e8ddd0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #6a5a4a;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-text {
+            font-size: 15px;
+            color: #4a3a2a;
+            line-height: 1.5;
+        }
+
+        .step-text .highlight {
+            background: #f0e8dc;
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #6a4a3a;
+        }
+
+        .step-img-placeholder {
+            background: #e8ddd0;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0 4px 0;
+            text-align: center;
+            font-size: 14px;
+            color: #8a7a6a;
+            border: 1px dashed rgba(160, 130, 110, 0.15);
+        }
+
+        .step-img-placeholder .big-icon {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .note {
+            background: rgba(200, 180, 160, 0.06);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #8a7a6a;
+            border-left: 3px solid #dccfc0;
+            text-align: left;
+        }
+
+        .note strong {
+            color: #5a4a3a;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #b09a86;
+            border-top: 1px solid #e0d2c2;
+            padding-top: 18px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 12px 36px;
+            background: #dccfc0;
+            color: #4a3a2a;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            background: #cdbcab;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px 16px 28px 16px;
+                border-radius: 32px;
+            }
+            h1 {
+                font-size: 22px;
+            }
+            .device-section {
+                padding: 16px;
+            }
+            .step-text {
+                font-size: 14px;
+            }
+            .device-section .device-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">← 返回遊戲列表</a>
+
+    <h1>📱 安裝到手機桌面</h1>
+    <div class="subtitle">把遊戲集像 App 一樣放在主畫面</div>
+
+    <!-- ===== Android ===== -->
+    <div class="device-section" id="androidSection">
+        <div class="device-title">
+            <span class="device-icon">🤖</span> Android
+        </div>
+
+        <div class="step">
+            <span class="step-num">1</span>
+            <span class="step-text">打開 Chrome 瀏覽器，進入這個遊戲集</span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">2</span>
+            <span class="step-text">點擊右上角 <span class="highlight">⋮</span>（三個點）</span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">3</span>
+            <span class="step-text">點擊 <span class="highlight">「安裝應用程式」</span> 或 <span class="highlight">「加到主畫面」</span></span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">4</span>
+            <span class="step-text">點擊 <span class="highlight">「安裝」</span> 或 <span class="highlight">「新增」</span>，就會出現在桌面了！</span>
+        </div>
+
+        <div class="note" style="margin-top: 12px;">
+            💡 <strong>不同手機名稱可能略有不同：</strong><br />
+            • 部分手機顯示「安裝應用程式」<br />
+            • 部分手機顯示「加到主畫面」<br />
+            • 部分手機顯示「安裝並建立捷徑」
+        </div>
+
+        <div class="step-img-placeholder">
+            <span class="big-icon">📸</span>
+            Chrome 右上角 ⋮ → 安裝應用程式 / 加到主畫面
+        </div>
+    </div>
+
+    <!-- ===== iOS ===== -->
+    <div class="device-section" id="iosSection">
+        <div class="device-title">
+            <span class="device-icon">🍎</span> iPhone / iPad
+        </div>
+
+        <div class="step">
+            <span class="step-num">1</span>
+            <span class="step-text">打開 <span class="highlight">Safari</span> 瀏覽器，進入這個遊戲集</span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">2</span>
+            <span class="step-text">點擊下方 <span class="highlight">☝️</span>（分享圖示）</span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">3</span>
+            <span class="step-text">往下滑，點擊 <span class="highlight">「加入主畫面」</span></span>
+        </div>
+
+        <div class="step">
+            <span class="step-num">4</span>
+            <span class="step-text">點擊右上角 <span class="highlight">「加入」</span>，就會出現在桌面了！</span>
+        </div>
+
+        <div class="step-img-placeholder">
+            <span class="big-icon">📸</span>
+            Safari 下方分享 → 加入主畫面
+        </div>
+
+        <div class="note">
+            💡 <strong>提醒：</strong>請務必使用 Safari 瀏覽器，Chrome 在 iOS 上無法加入主畫面。
+        </div>
+    </div>
+
+    <!-- ===== 小提醒 ===== -->
+    <div class="note" style="margin-top: 0;">
+        📌 <strong>捷徑名稱可以自己改</strong> — 加入主畫面時，可以自訂名稱（例如「遊戲集」）
+    </div>
+
+    <a href="index.html" class="btn-primary">← 回到遊戲列表</a>
+
+    <div class="footer">
+        🎮 把遊戲帶著走，隨時隨地都能玩
+    </div>
+</div>
+
+</body>
+</html>
