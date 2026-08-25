@@ -127,6 +127,10 @@
             margin-top: 4px;
         }
 
+        .game-card.hidden {
+            display: none;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 24px 16px 32px 16px;
@@ -155,18 +159,7 @@
 
     <div class="game-grid">
 
-        <!-- 遊戲 1：花園播種者 -->
-        <a href="garden-game/" class="game-card">
-            <div class="game-icon">🌸</div>
-            <div class="game-info">
-                <div class="name">花園播種者</div>
-                <div class="desc">播種 9 格，收成 30 種花朵，賺取金幣！</div>
-                <span class="badge">💰 單局金幣版</span>
-            </div>
-            <div class="game-arrow">→</div>
-        </a>
-
-        <!-- 遊戲 2：擲筊小遊戲 -->
+        <!-- 遊戲 1：擲筊小遊戲 -->
         <a href="poe-game/" class="game-card">
             <div class="game-icon">🙏</div>
             <div class="game-info">
@@ -177,17 +170,7 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 3：音效板 -->
-        <a href="soundboard/" class="game-card">
-            <div class="game-icon">🎵</div>
-            <div class="game-info">
-                <div class="name">溫柔音效板</div>
-                <div class="desc">自訂音效方塊，點擊播放，自由收藏！</div>
-                <span class="badge">🎶 可上傳 20 個音效</span>
-            </div>
-            <div class="game-arrow">→</div>
-        </a>
-        <!-- 遊戲 4：2048 -->
+        <!-- 遊戲 2：2048 -->
         <a href="2048-game/" class="game-card">
             <div class="game-icon">🌸</div>
             <div class="game-info">
@@ -197,17 +180,19 @@
             </div>
             <div class="game-arrow">→</div>
         </a>
-        <!-- 遊戲 5：華容道 -->
+
+        <!-- 遊戲 3：華容道 -->
         <a href="sliding-puzzle/" class="game-card">
             <div class="game-icon">🪵</div>
             <div class="game-info">
                 <div class="name">數字華容道</div>
-                <div class="desc">滑動數字，整行整列移動，挑戰 3×3 ~ 6×6！</div>
+                <div class="desc">滑動數字，整行整列移動，挑戰 3×3 ~ 7×7！</div>
                 <span class="badge">🧩 選單切換尺寸</span>
             </div>
             <div class="game-arrow">→</div>
         </a>
-                <!-- 遊戲 6：俄羅斯方塊 -->
+
+        <!-- 遊戲 4：俄羅斯方塊 -->
         <a href="tetris-game/" class="game-card">
             <div class="game-icon">🧩</div>
             <div class="game-info">
@@ -217,7 +202,29 @@
             </div>
             <div class="game-arrow">→</div>
         </a>
-    
+
+        <!-- 遊戲 5：音效板 -->
+        <a href="soundboard/" class="game-card">
+            <div class="game-icon">🎵</div>
+            <div class="game-info">
+                <div class="name">溫柔音效板</div>
+                <div class="desc">自訂音效方塊，點擊播放，自由收藏！</div>
+                <span class="badge">🎶 可上傳 20 個音效</span>
+            </div>
+            <div class="game-arrow">→</div>
+        </a>
+
+        <!-- 遊戲 6：花園播種者（已隱藏） -->
+        <a href="garden-game/" class="game-card hidden">
+            <div class="game-icon">🌸</div>
+            <div class="game-info">
+                <div class="name">花園播種者</div>
+                <div class="desc">播種 9 格，收成 30 種花朵，賺取金幣！</div>
+                <span class="badge">💰 單局金幣版</span>
+            </div>
+            <div class="game-arrow">→</div>
+        </a>
+
     </div>
 
     <div class="footer">
