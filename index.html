@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🎮 我的遊戲集</title>
+    <title>🎮 我的小工具集</title>
     <style>
         * {
             margin: 0;
@@ -45,7 +45,25 @@
             font-size: 15px;
             border-bottom: 1px dashed #dccfc0;
             padding-bottom: 20px;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
+        }
+
+        .install-btn {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #dccfc0;
+            color: #4a3a2a;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.2s;
+            margin-bottom: 24px;
+        }
+
+        .install-btn:hover {
+            background: #cdbcab;
+            transform: translateY(-2px);
         }
 
         .game-grid {
@@ -72,6 +90,11 @@
             border-color: #b8a48a;
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(80, 60, 40, 0.12);
+        }
+
+        .game-card.featured {
+            border-color: #d4bca6;
+            background: linear-gradient(145deg, #fcf8f2, #f5ede4);
         }
 
         .game-icon {
@@ -127,8 +150,9 @@
             margin-top: 4px;
         }
 
-        .game-card.hidden {
-            display: none;
+        .badge.new {
+            background: #f0d8c8;
+            color: #a06040;
         }
 
         @media (max-width: 480px) {
@@ -154,16 +178,25 @@
 <body>
 
 <div class="container">
-    <h1>🎮 我的遊戲集</h1>
-    <div class="subtitle">挑一個遊戲，開始你的小冒險</div>  
-    <!-- 👇 這裡加入安裝按鈕 -->
-    <div style="margin-bottom: 20px;">
-        <a href="install-guide.html" style="display: inline-block; padding: 10px 24px; background: #dccfc0; color: #4a3a2a; border-radius: 40px; text-decoration: none; font-weight: 600; font-size: 14px; transition: 0.2s;">📱 安裝到手機桌面</a>
-    </div>
+    <h1>🎮 我的小工具集</h1>
+    <div class="subtitle">挑一個工具，開始使用吧</div>
+
+    <a href="install-guide.html" class="install-btn">📱 安裝到手機桌面</a>
 
     <div class="game-grid">
 
-        <!-- 遊戲 1：擲筊小遊戲 -->
+        <!-- 1：刷起來（第一個） -->
+        <a href="quiz/" class="game-card featured">
+            <div class="game-icon">📝</div>
+            <div class="game-info">
+                <div class="name">刷起來</div>
+                <div class="desc">上傳 Excel 題庫，隨時隨地刷題練習！</div>
+                <span class="badge new">🆕 全新上線</span>
+            </div>
+            <div class="game-arrow">→</div>
+        </a>
+
+        <!-- 2：擲筊問事 -->
         <a href="poe-game/" class="game-card">
             <div class="game-icon">🙏</div>
             <div class="game-info">
@@ -174,7 +207,7 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 2：2048 -->
+        <!-- 3：2048 -->
         <a href="2048-game/" class="game-card">
             <div class="game-icon">🌸</div>
             <div class="game-info">
@@ -185,7 +218,7 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 3：華容道 -->
+        <!-- 4：華容道 -->
         <a href="sliding-puzzle/" class="game-card">
             <div class="game-icon">🪵</div>
             <div class="game-info">
@@ -196,7 +229,7 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 4：俄羅斯方塊 -->
+        <!-- 5：俄羅斯方塊 -->
         <a href="tetris-game/" class="game-card">
             <div class="game-icon">🧩</div>
             <div class="game-info">
@@ -207,7 +240,7 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 5：音效板 -->
+        <!-- 6：音效板 -->
         <a href="soundboard/" class="game-card">
             <div class="game-icon">🎵</div>
             <div class="game-info">
@@ -218,21 +251,10 @@
             <div class="game-arrow">→</div>
         </a>
 
-        <!-- 遊戲 6：花園播種者（已隱藏） -->
-        <a href="garden-game/" class="game-card hidden">
-            <div class="game-icon">🌸</div>
-            <div class="game-info">
-                <div class="name">花園播種者</div>
-                <div class="desc">播種 9 格，收成 30 種花朵，賺取金幣！</div>
-                <span class="badge">💰 單局金幣版</span>
-            </div>
-            <div class="game-arrow">→</div>
-        </a>
-
     </div>
 
     <div class="footer">
-        🌱 持續新增中 · 每個遊戲都是獨立小世界
+        🌱 持續新增中 · 每個工具都是獨立小世界
     </div>
 </div>
 
