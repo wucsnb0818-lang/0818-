@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>刷起來</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --blue:#4f8fdc;
+    --blue-deep:#3a6fb8;
+    --blue-dark:#2f6fce;
+    --blue-pale:#eaf2fc;
+    --gold:#f2b705;
+    --green:#2fae60;
+    --green-pale:#e5f7ec;
+    --red:#e5484d;
+    --red-pale:#fdecec;
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --text:#1d2733;
+    --text-soft:#6b7785;
+    --text-faint:#9aa4b2;
+    --border:#e6eaf0;
+    --radius:14px;
+  }
+  :root:not([data-theme="light"]){
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --blue:#5a97dd; --blue-deep:#3f6fac; --blue-dark:#7fb0ea; --blue-pale:#1c2c40;
+      --gold:#f2c035; --green:#3fbf78; --green-pale:#153627; --red:#f0656a; --red-pale:#3a1f21;
+      --bg:#12161c; --card:#1a2029; --text:#eef1f5; --text-soft:#a7b0bd; --text-faint:#6c7684; --border:#2a3140;
+    }
+  }
+  :root[data-theme="dark"]{
+    --blue:#5a97dd; --blue-deep:#3f6fac; --blue-dark:#7fb0ea; --blue-pale:#1c2c40;
+    --gold:#f2c035; --green:#3fbf78; --green-pale:#153627; --red:#f0656a; --red-pale:#3a1f21;
+    --bg:#12161c; --card:#1a2029; --text:#eef1f5; --text-soft:#a7b0bd; --text-faint:#6c7684; --border:#2a3140;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Noto Sans TC', -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  #shell{
+    max-width:480px; margin:0 auto; min-height:100dvh; background:var(--card);
+    display:flex; flex-direction:column; position:relative;
+    box-shadow:0 0 40px rgba(0,0,0,.06);
+  }
+  @media (min-width:520px){
+    body{ padding-top:calc(env(safe-area-inset-top,0px) + 24px); padding-bottom:24px; }
+    #shell{ min-height:auto; border-radius:20px; overflow:hidden; }
+  }
+  .topbar{
+    background:var(--blue); color:#fff; flex:0 0 auto;
+    padding-top:env(safe-area-inset-top,0px);
+    position:sticky; top:0; z-index:20;
+  }
+  .topbar-row{
+    display:flex; align-items:center; gap:8px; padding:14px 8px;
+    min-height:28px;
+  }
+  .topbar-btn{
+    background:none; border:none; color:#fff; font-size:22px; line-height:1;
+    padding:4px 8px; cursor:pointer; border-radius:8px; flex:0 0 auto;
+  }
+  .topbar-btn:active{ background:rgba(255,255,255,.18); }
+  .topbar-title{
+    flex:1 1 auto; text-align:center; font-size:16px; font-weight:700;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px;
+  }
+  .topbar-meta{ flex:0 0 auto; font-size:14px; font-weight:700; padding:0 8px; min-width:44px; text-align:right;}
+  .toolbar{
+    background:var(--blue-pale); display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; gap:4px; border-bottom:1px solid var(--border); flex-wrap:nowrap;
+  }
+  .stars-row{ display:flex; gap:2px; }
+  .star-ic{ font-size:19px; color:var(--text-faint); }
+  .star-ic.filled{ color:var(--gold); }
+  .tool-ic{
+    background:none; border:none; font-size:19px; cursor:pointer; color:var(--blue-deep);
+    padding:4px 6px; border-radius:8px; line-height:1;
+  }
+  .tool-ic:active{ background:rgba(0,0,0,.06); }
+  .tool-ic.fav-on{ color:var(--red); }
+  .tool-group{ display:flex; align-items:center; gap:2px; }
+  main{ flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .empty{
+    text-align:center; color:var(--text-soft); padding:80px 28px; font-size:15px; line-height:1.9;
+  }
+  .empty-emoji{ font-size:44px; display:block; margin-bottom:14px; }
+  /* HOME */
+  .bank-card{
+    display:flex; align-items:center; gap:12px; padding:16px 16px;
+    border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  .bank-card:active{ background:var(--blue-pale); }
+  .bank-icon{
+    width:42px; height:42px; border-radius:11px; background:var(--blue-pale); color:var(--blue-deep);
+    display:flex; align-items:center; justify-content:center; font-size:20px; flex:0 0 auto; font-weight:700;
+  }
+  .bank-info{ flex:1 1 auto; min-width:0; }
+  .bank-name{ font-size:15.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bank-sub{ font-size:12.5px; color:var(--text-soft); margin-top:2px; }
+  .bank-del{
+    background:none; border:none; color:var(--text-faint); font-size:19px; padding:6px 8px; cursor:pointer; flex:0 0 auto;
+    border-radius:8px;
+  }
+  .bank-del:active{ background:var(--red-pale); color:var(--red); }
+  .fab{
+    position:sticky; bottom:0; margin:14px; margin-left:auto; width:56px; height:56px; border-radius:50%;
+    background:var(--blue); color:#fff; border:none; font-size:28px; cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.22); display:flex; align-items:center; justify-content:center;
+    margin-bottom:calc(14px + env(safe-area-inset-bottom,0px));
+  }
+  .fab:active{ background:var(--blue-deep); }
+  /* LIST ROWS (groups/categories) */
+  .list-row{
+    display:flex; align-items:center; gap:10px; padding:17px 16px; border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .list-row:active{ background:var(--blue-pale); }
+  .list-row-label{ flex:1 1 auto; font-size:15px; font-weight:500; min-width:0; }
+  .list-row-label .sub{ display:block; font-size:12px; color:var(--text-soft); font-weight:400; margin-top:2px;}
+  .stat-btn{
+    display:flex; align-items:center; gap:4px; border:none; background:none; cursor:pointer;
+    font-size:14px; font-weight:700; padding:6px 6px; border-radius:8px; flex:0 0 auto;
+  }
+  .stat-btn:active{ background:rgba(0,0,0,.06); }
+  .stat-heart{ color:var(--blue-dark); }
+  .stat-star{ color:var(--gold); }
+  .chevron{ color:var(--text-faint); font-size:18px; flex:0 0 auto; }
+  .util-btn{
+    display:block; margin:18px auto 8px; background:var(--blue-pale); color:var(--blue-deep); border:none;
+    padding:9px 18px; border-radius:20px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .util-btn:active{ opacity:.75; }
+  .crumbbar{
+    display:flex; align-items:center; gap:6px; padding:10px 16px; font-size:12.5px; color:var(--text-soft);
+    background:var(--bg); border-bottom:1px solid var(--border);
+  }
+  /* MODAL */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,14,20,.5); display:flex; align-items:center; justify-content:center;
+    z-index:100; padding:24px;
+  }
+  .modal{
+    background:var(--card); border-radius:16px; width:100%; max-width:380px; overflow:hidden;
+    box-shadow:0 20px 50px rgba(0,0,0,.3);
+  }
+  .modal-head{ background:var(--blue); color:#fff; padding:16px 20px; font-size:16px; font-weight:700; text-align:center; position:relative; }
+  .modal-close{ position:absolute; right:10px; top:10px; background:none; border:none; color:#fff; font-size:18px; cursor:pointer; padding:4px 8px; opacity:.85;}
+  .modal-body{ padding:18px 20px 22px; }
+  .modal-row{
+    display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid var(--border); cursor:pointer;
+  }
+  .modal-row:last-of-type{ border-bottom:none; }
+  .modal-row:active{ background:var(--blue-pale); }
+  .modal-row.disabled{ opacity:.4; pointer-events:none; }
+  .mini-stars{ display:flex; gap:1px; flex:0 0 auto; }
+  .mini-stars .star-ic{ font-size:15px; }
+  .modal-row-label{ flex:1 1 auto; font-size:14px; color:var(--text); }
+  .modal-row-count{ font-size:13px; color:var(--text-soft); font-weight:700; }
+  .modal-note{ font-size:12px; color:var(--text-soft); line-height:1.7; margin-top:12px; text-align:center; }
+  .modal-fav-count{ text-align:center; font-size:15px; padding:6px 0 18px; }
+  .modal-fav-count b{ font-size:22px; color:var(--blue-dark); }
+  .modal-btns{ display:flex; gap:12px; }
+  .modal-btns button{
+    flex:1; padding:12px 0; border-radius:24px; border:none; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .btn-no{ background:var(--bg); color:var(--text-soft); }
+  .btn-yes{ background:var(--blue); color:#fff; }
+  .btn-yes:disabled{ background:var(--border); color:var(--text-faint); }
+  .btn-yes:active,.btn-no:active{ opacity:.8; }
+  /* EDIT MODAL */
+  .field-label{ font-size:12px; color:var(--text-soft); margin:12px 0 5px; font-weight:700; }
+  .field-label:first-child{ margin-top:0; }
+  textarea,input[type=text],select{
+    width:100%; border:1px solid var(--border); border-radius:10px; padding:9px 11px; font-size:14px;
+    background:var(--bg); color:var(--text); font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:52px; }
+  .opt-edit-row{ display:flex; align-items:center; gap:8px; margin-bottom:7px; }
+  .opt-edit-row .lab{ width:20px; flex:0 0 auto; font-weight:700; color:var(--text-soft); }
+  .opt-edit-row input[type=radio]{ flex:0 0 auto; width:18px; height:18px; }
+  .save-btn{
+    width:100%; margin-top:16px; background:var(--blue); color:#fff; border:none; border-radius:24px;
+    padding:12px 0; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  /* QUIZ BODY */
+  .qwrap{ padding:20px 18px 28px; }
+  .qtext{ font-size:calc(15.5px * var(--fs,1)); font-weight:500; line-height:1.75; margin-bottom:18px; white-space:pre-wrap; }
+  .opt-row{
+    display:flex; gap:10px; padding:14px 12px; border-bottom:1px solid var(--border); cursor:pointer;
+    font-size:calc(14.5px * var(--fs,1)); line-height:1.6; border-radius:10px; margin-bottom:2px;
+  }
+  .opt-row:active{ background:var(--blue-pale); }
+  .opt-row.locked{ cursor:default; }
+  .opt-row .mark{ width:14px; flex:0 0 auto; font-weight:800; }
+  .opt-row.correct{ background:var(--green-pale); }
+  .opt-row.correct .mark{ color:var(--green); }
+  .opt-row.wrong{ background:var(--red-pale); }
+  .opt-row.wrong .mark{ color:var(--red); }
+  .opt-lab{ font-weight:700; flex:0 0 auto; }
+  .opt-text{ flex:1 1 auto; }
+  .qfoot{ display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
+  .explain-link{ background:none; border:none; color:var(--blue-dark); font-size:13px; cursor:pointer; padding:4px 0; }
+  .report-link{ background:none; border:none; color:var(--text-faint); font-size:13px; cursor:pointer; padding:4px 0; }
+  .explain-box{
+    background:var(--blue-pale); border-radius:10px; padding:12px 14px; font-size:13px; color:var(--text-soft);
+    margin-top:10px; line-height:1.7; white-space:pre-wrap;
+  }
+  .quiz-bottom{
+    display:flex; gap:8px; padding:10px 14px; border-top:1px solid var(--border); background:var(--card);
+    position:sticky; bottom:0; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  }
+  .quiz-bottom button{
+    flex:1; padding:13px 0; border-radius:24px; border:none; font-size:14.5px; font-weight:700; cursor:pointer;
+  }
+  .qb-prev,.qb-end{ background:var(--bg); color:var(--text-soft); }
+  .qb-next{ background:var(--blue); color:#fff; }
+  .qb-prev:disabled,.qb-next:disabled{ background:var(--border); color:var(--text-faint); }
+  .toast{
+    position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:rgba(20,24,30,.92); color:#fff;
+    padding:10px 18px; border-radius:22px; font-size:13px; z-index:200; max-width:80%; text-align:center;
+  }
+  /* RESULT */
+  .result-wrap{ padding:0 0 30px; }
+  .result-hero{ background:var(--blue); color:#fff; text-align:center; padding:22px 20px 60px; }
+  .result-timer{ font-size:14px; opacity:.9; }
+  .result-circle{
+    width:150px; height:150px; border-radius:50%; background:var(--card); color:var(--text); margin:22px auto -46px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(0,0,0,.18);
+  }
+  .result-circle .lab{ font-size:12.5px; color:var(--text-soft); }
+  .result-circle .pct{ font-size:38px; font-weight:900; color:var(--blue-dark); line-height:1.1; }
+  .result-circle .pct span{ font-size:18px; font-weight:700; }
+  .result-card{
+    background:var(--card); margin:0 18px; border-radius:16px; padding:56px 22px 22px; text-align:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.05);
+  }
+  .result-msg{ font-size:15px; color:var(--text-soft); margin-bottom:22px; font-weight:500; }
+  .result-stats{ display:flex; flex-direction:column; gap:14px; margin-bottom:8px; }
+  .rstat-row{ display:flex; align-items:center; gap:12px; }
+  .rstat-ic{ width:22px; text-align:center; flex:0 0 auto; font-size:16px; }
+  .rstat-bar{ flex:1 1 auto; height:8px; background:var(--border); border-radius:6px; overflow:hidden; }
+  .rstat-bar i{ display:block; height:100%; border-radius:6px; }
+  .rstat-num{ width:44px; text-align:right; flex:0 0 auto; font-size:13px; font-weight:700; color:var(--text-soft); }
+  .rstat-delta{ font-size:12px; font-weight:700; margin-left:4px; }
+  .result-btns{ display:flex; gap:10px; margin-top:22px; }
+  .result-btns button{
+    flex:1; padding:12px 0; border-radius:24px; border:none; font-size:13.5px; font-weight:700; cursor:pointer;
+  }
+  .rb-back{ background:var(--bg); color:var(--text-soft); }
+  .rb-review{ background:var(--red-pale); color:var(--red); }
+  .rb-review:disabled{ background:var(--bg); color:var(--text-faint); }
+  .rb-retry{ background:var(--blue); color:#fff; }
+  /* UPLOAD / MAPPING */
+  .up-wrap{ padding:20px 18px 40px; }
+  .up-section{ margin-bottom:20px; }
+  .up-hint{ font-size:12.5px; color:var(--text-soft); line-height:1.7; margin-bottom:10px; }
+  .opt-map-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .opt-map-row .lab{ width:64px; flex:0 0 auto; font-size:13px; font-weight:700; color:var(--text-soft); }
+  .opt-map-row select{ flex:1 1 auto; }
+  .opt-map-row button{
+    flex:0 0 auto; background:none; border:none; color:var(--text-faint); font-size:18px; cursor:pointer; padding:2px 6px;
+  }
+  .add-opt-btn{
+    background:none; border:1px dashed var(--border); color:var(--blue-dark); border-radius:10px; padding:8px;
+    width:100%; font-size:13px; cursor:pointer; margin-top:4px;
+  }
+  .file-drop{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    border:2px dashed var(--border); border-radius:16px; padding:40px 20px; text-align:center; color:var(--text-soft);
+    cursor:pointer; font-size:14px; margin-top:18px;
+  }
+  .file-drop:active{ background:var(--blue-pale); }
+  .tutorial-card{
+    margin:14px 16px 4px; border:1px solid var(--border); border-radius:14px; overflow:hidden; background:var(--blue-pale);
+  }
+  .tutorial-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:none; border:none; padding:14px 16px; font-size:14px; font-weight:700; color:var(--blue-deep);
+    cursor:pointer; text-align:left;
+  }
+  .tutorial-toggle:active{ opacity:.75; }
+  .tutorial-chevron{ transition:transform .15s ease; flex:0 0 auto; }
+  .tutorial-chevron.open{ transform:rotate(90deg); }
+  .tutorial-body{ padding:0 16px 16px; }
+  .tutorial-lead{ font-size:13px; color:var(--text-soft); line-height:1.8; margin:0 0 10px; }
+  .tutorial-prompt{
+    background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 13px;
+    font-size:12.5px; line-height:1.8; color:var(--text); white-space:pre-wrap; font-family:inherit;
+    margin:0 0 10px; max-height:260px; overflow-y:auto;
+  }
+  .copy-btn{
+    background:var(--blue); color:#fff; border:none; border-radius:20px; padding:9px 18px; font-size:13px;
+    font-weight:700; cursor:pointer;
+  }
+  .copy-btn:active{ background:var(--blue-deep); }
+  .tutorial-note{ font-size:12px; color:var(--text-soft); line-height:1.8; margin:10px 0 0; }
+  .warn-box{ background:var(--red-pale); color:var(--red); border-radius:10px; padding:10px 12px; font-size:12.5px; margin-top:10px; line-height:1.7; }
+  @keyframes pop{ from{ transform:scale(.9); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .modal{ animation:pop .15s ease; }
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="topbar-slot"></div>
+  <main id="main-slot"></main>
+</div>
+<div id="modal-slot"></div>
+<div id="toast-slot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ IndexedDB helpers ============ */
+const DB_NAME='quizbank_db', DB_VER=1, STORE='banks';
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE,{keyPath:'id'}); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function idbGetAll(){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readonly'); const st=tx.objectStore(STORE); const req=st.getAll();
+    req.onsuccess=()=>resolve(req.result||[]); req.onerror=()=>reject(req.error);
+  });
+}
+async function idbPut(obj){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).put(obj);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbDelete(id){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite'); tx.objectStore(STORE).delete(id);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+
+/* ============ Global state ============ */
+const state = { banks:[], nav:[{view:'home'}], quiz:null, tempUpload:null, tutorialOpen:true };
+
+function esc(s){
+  return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function uid(){ return 'q_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8); }
+function attr(obj){ return encodeURIComponent(JSON.stringify(obj)); }
+function readAttr(el){ try{ return JSON.parse(decodeURIComponent(el.dataset.payload||'null')); }catch(e){ return null; } }
+function toast(msg){
+  const slot = document.getElementById('toast-slot');
+  const el = document.createElement('div'); el.className='toast'; el.textContent=msg;
+  slot.appendChild(el);
+  const duration = Math.min(6000, Math.max(1800, msg.length*80));
+  setTimeout(()=>{ el.remove(); }, duration);
+}
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(
+      ()=>toast('已複製！貼給 AI 使用吧'),
+      ()=>fallbackCopy(text)
+    );
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast(ok ? '已複製！貼給 AI 使用吧' : '複製失敗，請手動選取文字複製');
+  }catch(e){
+    toast('複製失敗，請手動選取文字複製');
+  }
+}
+function fmtTime(sec){
+  const m=Math.floor(sec/60), s=sec%60;
+  return m+':'+String(s).padStart(2,'0');
+}
+
+/* ============ Data helpers ============ */
+function findBank(id){ return state.banks.find(b=>b.id===id); }
+
+function statsFor(list){
+  const total=list.length;
+  const favCount=list.filter(q=>q.favorite).length;
+  const starSum=list.reduce((s,q)=>s+q.stars,0);
+  const pct= total? Math.round(starSum/(total*5)*100):0;
+  return {total, favCount, starSum, maxStars: total*5, pct};
+}
+
+function computeGroups(list){
+  const sorted=[...list].sort((a,b)=>a.num-b.num);
+  const groups=[]; const total=sorted.length; let start=0;
+  while(start<total){
+    let end=Math.min(start+200,total);
+    const remaining=total-end;
+    if(remaining>0 && remaining<=50) end=total; // merge a remainder of up to 50 into the previous group (max group size 250), never drop questions
+    groups.push(sorted.slice(start,end));
+    start=end;
+  }
+  return groups.map(g=>({ questions:g, label:g[0].num+'~'+g[g.length-1].num }));
+}
+
+function categoriesOf(bank){
+  const seen=[]; const map={};
+  bank.questions.forEach(q=>{
+    const c=q.category||'未分類';
+    if(!map[c]){ map[c]=[]; seen.push(c); }
+    map[c].push(q);
+  });
+  return seen.map(name=>({ name, questions:map[name] }));
+}
+
+async function persistBank(bank){ await idbPut(bank); }
+
+/* ============ Navigation ============ */
+function go(view, params){ state.nav.push({view,params}); render(); window.scrollTo(0,0); }
+function goReplace(view, params){ state.nav[state.nav.length-1]={view,params}; render(); }
+function back(){
+  if(state.nav.length>1) state.nav.pop();
+  render(); window.scrollTo(0,0);
+}
+function resetNavTo(navArr){ state.nav = navArr.slice(); render(); window.scrollTo(0,0); }
+function current(){ return state.nav[state.nav.length-1]; }
+
+/* ============ Rendering root ============ */
+function render(){
+  const c = current();
+  const topSlot = document.getElementById('topbar-slot');
+  const mainSlot = document.getElementById('main-slot');
+  let topHtml='', mainHtml='';
+  if(c.view==='home'){ [topHtml,mainHtml]=renderHome(); }
+  else if(c.view==='upload'){ [topHtml,mainHtml]=renderUpload(); }
+  else if(c.view==='mapping'){ [topHtml,mainHtml]=renderMapping(); }
+  else if(c.view==='bankList'){ [topHtml,mainHtml]=renderBankList(c.params); }
+  else if(c.view==='quiz'){ [topHtml,mainHtml]=renderQuiz(); }
+  else if(c.view==='result'){ [topHtml,mainHtml]=renderResult(); }
+  topSlot.innerHTML = topHtml;
+  mainSlot.innerHTML = mainHtml;
+}
+
+/* ============ HOME ============ */
+const CONVERT_PROMPT = `請將我上傳的這份題庫檔案，轉換為 Excel 表格格式。表格欄位請包含：
+【類型】（如果原始題庫有分類/科目請填入，若沒有分類可以省略這欄）
+【題號】
+【題目】
+【選項A】【選項B】【選項C】【選項D】（依實際選項數量增減，不一定要剛好4個）
+【正確答案】
+請完全保留原本的字句，不要做任何修改、改寫或省略，直接輸出成一份 .xlsx 檔案讓我下載，不要只顯示成文字或表格預覽。`;
+
+function renderTutorialCard(){
+  const open = state.tutorialOpen;
+  return `<div class="tutorial-card">
+    <button class="tutorial-toggle" data-action="toggle-tutorial">
+      <span>📋 手上只有 PDF／圖片題庫？教你用 AI 3 秒轉成 Excel</span>
+      <span class="tutorial-chevron ${open?'open':''}">›</span>
+    </button>
+    ${open? `<div class="tutorial-body">
+      <p class="tutorial-lead">把你的題庫 PDF（或圖片、文字檔）丟給 Claude 之類支援檔案的 AI，並複製以下這段話給它：</p>
+      <pre class="tutorial-prompt">${esc(CONVERT_PROMPT)}</pre>
+      <button class="copy-btn" data-action="copy-prompt">📋 複製這段話</button>
+      <p class="tutorial-note">AI 會依你的題庫內容輸出一份 .xlsx 檔案，下載後點這個網站右下角的「＋」上傳就能開始刷題。欄位名稱不用跟這裡完全一樣，本站上傳時會自動偵測對應。</p>
+    </div>` : ''}
+  </div>`;
+}
+
+function renderHome(){
+  const top = `
+    <div class="topbar"><div class="topbar-row">
+      <div style="width:34px"></div>
+      <div class="topbar-title">刷起來</div>
+      <div style="width:34px"></div>
+    </div></div>`;
+  let body = renderTutorialCard();
+  if(state.banks.length===0){
+    body += `<div class="empty"><span class="empty-emoji">📚</span>還沒有題庫<br>點右下角「＋」上傳 Excel 題庫檔案</div>`;
+  } else {
+    body += state.banks.map(b=>{
+      const st = statsFor(b.questions);
+      return `<div class="bank-card" data-action="open-bank" data-payload="${attr({id:b.id})}">
+        <div class="bank-icon">📘</div>
+        <div class="bank-info">
+          <div class="bank-name">${esc(b.name)}</div>
+          <div class="bank-sub">共 ${st.total} 題 · 收藏 ${st.favCount} 題 · 熟悉度 ${st.pct}%</div>
+        </div>
+        <button class="bank-del" data-action="delete-bank" data-payload="${attr({id:b.id})}">🗑</button>
+      </div>`;
+    }).join('');
+  }
+  body += `<button class="fab" data-action="open-upload">＋</button>`;
+  return [top, body];
+}
+
+/* ============ UPLOAD ============ */
+function renderUpload(){
+  const top = `
+    <div class="topbar"><div class="topbar-row">
+      <button class="topbar-btn" data-action="go-back">‹</button>
+      <div class="topbar-title">新增題庫</div>
+      <div style="width:34px"></div>
+    </div></div>`;
+  const body = `
+    <div class="up-wrap">
+      <div class="up-hint">選擇一個 Excel 檔案（.xlsx / .xls）。上傳後可以自動偵測欄位，你也可以手動調整對應。</div>
+      <label class="file-drop">
+        📄 點此選擇 Excel 檔案
+        <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none">
+      </label>
+      <div id="sheet-picker-slot"></div>
+    </div>`;
+  setTimeout(()=>{
+    const inp = document.getElementById('file-input');
+    if(inp) inp.addEventListener('change', onFileChosen);
+  },0);
+  return [top, body];
+}
+
+function onFileChosen(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = new Uint8Array(reader.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const filename = file.name.replace(/\.(xlsx|xls)$/i,'');
+      if(wb.SheetNames.length>1){
+        renderSheetPicker(wb, filename);
+      } else {
+        loadSheet(wb, wb.SheetNames[0], filename);
+      }
+    }catch(err){
+      toast('讀取檔案失敗，請確認檔案格式');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderSheetPicker(wb, filename){
+  const slot = document.getElementById('sheet-picker-slot');
+  slot.innerHTML = `
+    <div class="up-section">
+      <div class="field-label">這個檔案有多個工作表，請選擇要匯入的：</div>
+      <select id="sheet-select">${wb.SheetNames.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}</select>
+      <button class="save-btn" id="sheet-confirm-btn">下一步</button>
+    </div>`;
+  document.getElementById('sheet-confirm-btn').addEventListener('click', ()=>{
+    const name = document.getElementById('sheet-select').value;
+    loadSheet(wb, name, filename);
+  });
+}
+
+function loadSheet(wb, sheetName, filename){
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', blankrows:false});
+  if(rows.length<2){ toast('這個工作表沒有足夠的資料'); return; }
+  const headers = rows[0].map(h=>String(h||'').trim());
+  const dataRows = rows.slice(1);
+  const detected = detectColumns(headers);
+  state.tempUpload = { filename, headers, dataRows, mapping: detected, unresolved:0 };
+  go('mapping', {});
+}
+
+function normalize(s){ return (s==null?'':String(s)).trim(); }
+
+function detectColumns(headers){
+  const norm = headers.map(normalize);
+  function find(patterns){
+    for(let i=0;i<norm.length;i++){ if(patterns.includes(norm[i])) return i; }
+    for(let i=0;i<norm.length;i++){ for(const p of patterns){ if(norm[i] && norm[i].indexOf(p)>=0) return i; } }
+    return -1;
+  }
+  const questionIdx = find(['題目','题目','問題','問題內容','題幹','题干','question','Question','Q']);
+  const categoryIdx = find(['類型','类型','分類','分类','科目','類別','类别','category','Category']);
+  const numIdx = find(['題號','题号','編號','编号','No.','No','num','Num','number']);
+  const answerIdx = find(['正確答案','正确答案','答案','正解','answer','Answer','correct']);
+  const explainIdx = find(['解析','說明','法源依據','備註','explain','Explain']);
+  let optionIdxs = [];
+  for(let i=0;i<norm.length;i++){
+    if(i===answerIdx || i===questionIdx || i===categoryIdx || i===numIdx || i===explainIdx) continue;
+    const h=norm[i];
+    if(/選項|选项|option/i.test(h) || /^[A-Fa-f]$/.test(h)) optionIdxs.push(i);
+  }
+  if(optionIdxs.length===0){
+    // fallback: any remaining unclaimed column becomes an option candidate, in order
+    for(let i=0;i<norm.length;i++){
+      if(i===answerIdx || i===questionIdx || i===categoryIdx || i===numIdx || i===explainIdx) continue;
+      optionIdxs.push(i);
+    }
+  }
+  optionIdxs.sort((a,b)=>{
+    const la=(norm[a].match(/[A-Fa-f]/g)||[]).pop();
+    const lb=(norm[b].match(/[A-Fa-f]/g)||[]).pop();
+    if(la && lb) return la.localeCompare(lb);
+    return a-b;
+  });
+  return {questionIdx, categoryIdx, numIdx, answerIdx, explainIdx, optionIdxs};
+}
+
+/* ============ MAPPING SCREEN ============ */
+function renderMapping(){
+  const up = state.tempUpload;
+  const top = `
+    <div class="topbar"><div class="topbar-row">
+      <button class="topbar-btn" data-action="go-back">‹</button>
+      <div class="topbar-title">確認欄位對應</div>
+      <div style="width:34px"></div>
+    </div></div>`;
+  const headerOpts = (selectedIdx)=> up.headers.map((h,i)=>`<option value="${i}" ${i===selectedIdx?'selected':''}>${esc(h||'(欄位'+(i+1)+')')}</option>`).join('');
+  const noneOpt = (isNone)=> `<option value="-1" ${isNone?'selected':''}>（不使用）</option>`;
+
+  const optRows = up.mapping.optionIdxs.map((idx,i)=>{
+    const label = String.fromCharCode(65+i);
+    return `<div class="opt-map-row">
+      <div class="lab">選項${label}</div>
+      <select data-opt-idx="${i}" class="opt-map-select">${headerOpts(idx)}</select>
+      <button data-action="remove-opt-col" data-payload="${attr({i})}" ${up.mapping.optionIdxs.length<=2?'style="visibility:hidden"':''}>✕</button>
+    </div>`;
+  }).join('');
+
+  const body = `
+    <div class="up-wrap">
+      <div class="up-hint">檔案：<b>${esc(up.filename)}</b>（共 ${up.dataRows.length} 列資料）。系統已自動猜測欄位，請確認或調整。</div>
+
+      <div class="up-section">
+        <div class="field-label">題目欄位</div>
+        <select id="map-question">${headerOpts(up.mapping.questionIdx)}</select>
+
+        <div class="field-label">分類欄位（可選，例如「類型」「科目」）</div>
+        <select id="map-category">${noneOpt(up.mapping.categoryIdx===-1)}${headerOpts(up.mapping.categoryIdx)}</select>
+
+        <div class="field-label">題號欄位（可選；不使用則自動依序編號）</div>
+        <select id="map-num">${noneOpt(up.mapping.numIdx===-1)}${headerOpts(up.mapping.numIdx)}</select>
+      </div>
+
+      <div class="up-section">
+        <div class="field-label">選項欄位（依序對應 A、B、C...）</div>
+        <div id="opt-map-rows">${optRows}</div>
+        <button class="add-opt-btn" data-action="add-opt-col">＋ 新增一個選項欄位</button>
+      </div>
+
+      <div class="up-section">
+        <div class="field-label">正確答案欄位</div>
+        <select id="map-answer">${headerOpts(up.mapping.answerIdx)}</select>
+
+        <div class="field-label">解析／備註欄位（可選）</div>
+        <select id="map-explain">${noneOpt(up.mapping.explainIdx===-1)}${headerOpts(up.mapping.explainIdx)}</select>
+      </div>
+
+      <button class="save-btn" data-action="confirm-mapping">匯入題庫</button>
+    </div>`;
+
+  setTimeout(()=>{
+    document.querySelectorAll('.opt-map-select').forEach(sel=>{
+      sel.addEventListener('change', ()=>{
+        const i = +sel.dataset.optIdx;
+        up.mapping.optionIdxs[i] = +sel.value;
+      });
+    });
+    const mq=document.getElementById('map-question'); if(mq) mq.addEventListener('change',()=>up.mapping.questionIdx=+mq.value);
+    const mc=document.getElementById('map-category'); if(mc) mc.addEventListener('change',()=>up.mapping.categoryIdx=+mc.value);
+    const mn=document.getElementById('map-num'); if(mn) mn.addEventListener('change',()=>up.mapping.numIdx=+mn.value);
+    const ma=document.getElementById('map-answer'); if(ma) ma.addEventListener('change',()=>up.mapping.answerIdx=+ma.value);
+    const me=document.getElementById('map-explain'); if(me) me.addEventListener('change',()=>up.mapping.explainIdx=+me.value);
+  },0);
+
+  return [top, body];
+}
+
+function resolveAnswerLabel(rawAns, options){
+  if(!rawAns) return null;
+  const m = rawAns.match(/^[A-Za-z]/);
+  if(m && rawAns.length<=3){
+    const letter = m[0].toUpperCase();
+    const byHeader = options.find(o=>{
+      const hl=(o.sourceHeader.match(/[A-Fa-f]/g)||[]).pop();
+      return hl && hl.toUpperCase()===letter;
+    });
+    if(byHeader) return byHeader.label;
+    const idx = letter.charCodeAt(0)-65;
+    if(idx>=0 && idx<options.length) return options[idx].label;
+  }
+  const exact = options.find(o=>o.text===rawAns);
+  if(exact) return exact.label;
+  const strip = s=>s.replace(/[。.\s]+$/,'');
+  const loose = options.find(o=>strip(o.text)===strip(rawAns));
+  if(loose) return loose.label;
+  return null;
+}
+
+function buildBankFromUpload(){
+  const up = state.tempUpload;
+  const m = up.mapping;
+  if(m.questionIdx<0 || m.answerIdx<0 || m.optionIdxs.filter(i=>i>=0).length<2){
+    toast('請至少設定題目、答案，以及兩個選項欄位');
+    return null;
+  }
+  const bankId = 'bank_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);
+  const hasCategory = m.categoryIdx>=0;
+  const autoNum = {};
+  const questions=[];
+  let unresolved=0;
+  let skippedNoQuestion=0;
+  let skippedTooFewOptions=0;
+  up.dataRows.forEach((row,rowIdx)=>{
+    const qText = normalize(row[m.questionIdx]);
+    if(!qText){ skippedNoQuestion++; return; }
+    const category = hasCategory ? (normalize(row[m.categoryIdx])||'未分類') : null;
+    let num;
+    if(m.numIdx>=0){
+      const n = parseInt(normalize(row[m.numIdx]),10);
+      num = isNaN(n) ? (rowIdx+1) : n;
+    } else {
+      const key = category||'_';
+      autoNum[key] = (autoNum[key]||0)+1;
+      num = autoNum[key];
+    }
+    const options = m.optionIdxs.filter(i=>i>=0).map((colIdx,i)=>({
+      label:String.fromCharCode(65+i),
+      text:normalize(row[colIdx]),
+      sourceHeader:normalize(up.headers[colIdx])
+    })).filter(o=>o.text!=='');
+    if(options.length<2){ skippedTooFewOptions++; return; }
+    const rawAns = normalize(row[m.answerIdx]);
+    let correctLabel = resolveAnswerLabel(rawAns, options);
+    if(correctLabel===null){ correctLabel = options[0].label; unresolved++; }
+    const explain = m.explainIdx>=0 ? normalize(row[m.explainIdx]) : '';
+    questions.push({
+      id: bankId+'_'+rowIdx+'_'+uid(),
+      category, num, question:qText, options, correctLabel, explain,
+      stars:0, favorite:false
+    });
+  });
+  if(questions.length===0){ toast('沒有解析到任何題目，請檢查欄位對應'); return null; }
+  const skipped = skippedNoQuestion+skippedTooFewOptions;
+  return { bank:{id:bankId, name:up.filename, createdAt:Date.now(), hasCategory, questions}, unresolved, skipped, skippedNoQuestion, skippedTooFewOptions, totalRows:up.dataRows.length };
+}
+
+/* ============ BANK LIST (single flat screen per bank) ============ */
+function scopeQuestions(bank, category){
+  return category==null ? bank.questions : bank.questions.filter(q=>(q.category||'未分類')===category);
+}
+
+function renderBankList(params){
+  const bank = findBank(params.bankId);
+  const top = `
+    <div class="topbar"><div class="topbar-row">
+      <button class="topbar-btn" data-action="go-back">‹</button>
+      <div class="topbar-title">${esc(bank.name)}</div>
+      <div style="width:34px"></div>
+    </div></div>`;
+
+  const allStats = statsFor(bank.questions);
+  let rows = renderStatRow({
+    label:'模擬測驗', sub:'從全部題目隨機抽 '+Math.min(50,allStats.total)+' 題',
+    stats:allStats, mainAction:'start-mock', mainPayload:{bankId:bank.id, category:null}, showChevron:false
+  });
+
+  // Buckets: one bucket per category if the bank has categories, otherwise one bucket for the whole bank.
+  const buckets = bank.hasCategory
+    ? categoriesOf(bank).map(cat=>({ name:cat.name, questions:cat.questions }))
+    : [{ name:null, questions:bank.questions }];
+
+  buckets.forEach(bucket=>{
+    // The 200-per-group rule only kicks in when a bucket itself is too large (>250) to be one quiz.
+    const groups = computeGroups(bucket.questions);
+    if(groups.length<=1){
+      const label = bucket.name || '全部題目';
+      const st = statsFor(bucket.questions);
+      rows += renderStatRow({
+        label, sub:st.total+' 題',
+        stats:st, mainAction:'start-group', mainPayload:{bankId:bank.id, category:bucket.name, range:groups[0]?groups[0].label:null}, showChevron:false
+      });
+    } else {
+      groups.forEach(g=>{
+        const st = statsFor(g.questions);
+        const prefix = bucket.name || bank.name;
+        const label = prefix+' ('+g.label+')';
+        rows += renderStatRow({
+          label, sub:st.total+' 題',
+          stats:st, mainAction:'start-group', mainPayload:{bankId:bank.id, category:bucket.name, range:g.label}, showChevron:false
+        });
+      });
+    }
+  });
+
+  rows += `<button class="util-btn" data-action="reset-hearts" data-payload="${attr({bankId:bank.id})}">重置愛心數量</button>`;
+  return [top, rows];
+}
+
+function renderStatRow(o){
+  const heartPayload = o.heartPayload || o.mainPayload;
+  const starPayload = o.starPayload || o.mainPayload;
+  return `<div class="list-row" data-action="${o.mainAction}" data-payload="${attr(o.mainPayload)}">
+    <div class="list-row-label">${esc(o.label)}<span class="sub">${esc(o.sub)}</span></div>
+    <button class="stat-btn stat-heart" data-action="open-heart-modal" data-payload="${attr(heartPayload)}">♥ x${o.stats.favCount}</button>
+    <button class="stat-btn stat-star" data-action="open-star-modal" data-payload="${attr(starPayload)}">★ ${o.stats.pct}%</button>
+    ${o.showChevron? '<span class="chevron">›</span>':''}
+  </div>`;
+}
+
+/* resolve a scope's question list from a generic payload {bankId, category, range?} */
+function resolveScope(payload){
+  const bank = findBank(payload.bankId);
+  const catScope = scopeQuestions(bank, payload.category==null?null:payload.category);
+  if(payload.range){
+    const groups = computeGroups(catScope);
+    const grp = groups.find(g=>g.label===payload.range);
+    return { bank, pool:catScope, list: grp? grp.questions: [] };
+  }
+  return { bank, pool:catScope, list:catScope };
+}
+
+/* ============ MODALS: star filter / heart / edit / end-confirm ============ */
+function openStarModal(payload){
+  const {pool} = resolveScope(payload);
+  const st = statsFor(pool);
+  const tiers = [0,1,2,3,4].map(n=>{
+    const count = n===0 ? pool.filter(q=>q.stars===0).length : pool.filter(q=>q.stars<=n).length;
+    const starsHtml = Array.from({length:5}).map((_,i)=>`<span class="star-ic ${i<=n?'filled':''}">★</span>`).join('');
+    return `<div class="modal-row ${count===0?'disabled':''}" data-action="start-star-filter" data-payload="${attr(Object.assign({},payload,{maxStar:n}))}">
+      <div class="mini-stars">${starsHtml}</div>
+      <div class="modal-row-label">測驗 ${n===0?'0':'0~'+n} 顆星的題目</div>
+      <div class="modal-row-count">${count}題</div>
+    </div>`;
+  }).join('');
+  showModal(`
+    <div class="modal-head">依照星星數量測驗
+      <button class="modal-close" data-action="close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      ${tiers}
+      <div class="modal-note">星星數量代表對題目的熟悉度，可以讓您針對不熟的題目多做練習。<br>每題答對一次就會增加一顆星星（最高5顆），答錯則會歸零。<br>目前進度：${st.starSum}/${st.maxStars}</div>
+    </div>`);
+}
+
+function openHeartModal(payload){
+  const {pool} = resolveScope(payload);
+  const favQs = pool.filter(q=>q.favorite);
+  showModal(`
+    <div class="modal-head">測驗加入愛心的題目
+      <button class="modal-close" data-action="close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-fav-count">共 <b>${favQs.length}</b> 題<br>是否要進行測驗？</div>
+      <div class="modal-btns">
+        <button class="btn-no" data-action="close-modal">NO</button>
+        <button class="btn-yes" ${favQs.length===0?'disabled':''} data-action="start-favorite-quiz" data-payload="${attr(payload)}">YES</button>
+      </div>
+    </div>`);
+}
+
+function showModal(html){
+  document.getElementById('modal-slot').innerHTML = `<div class="overlay" data-action="overlay-bg">
+    <div class="modal" data-stop="1">${html}</div>
+  </div>`;
+}
+function closeModal(){ document.getElementById('modal-slot').innerHTML=''; }
+
+function showConfirmModal(message, yesAction, yesPayload, yesLabel){
+  showModal(`
+    <div class="modal-head">確認</div>
+    <div class="modal-body">
+      <div class="modal-fav-count" style="font-size:14px; padding-bottom:6px;">${esc(message)}</div>
+      <div class="modal-btns">
+        <button class="btn-no" data-action="close-modal">取消</button>
+        <button class="btn-yes" data-action="${yesAction}" data-payload="${attr(yesPayload)}">${esc(yesLabel||'確定')}</button>
+      </div>
+    </div>`);
+}
+
+function openEditModal(){
+  const q = state.quiz.list[state.quiz.idx];
+  const optRows = q.options.map((o,i)=>`
+    <div class="opt-edit-row">
+      <input type="radio" name="edit-correct" value="${o.label}" ${o.label===q.correctLabel?'checked':''}>
+      <div class="lab">${o.label}</div>
+      <input type="text" class="edit-opt-text" data-lab="${o.label}" value="${esc(o.text)}">
+    </div>`).join('');
+  showModal(`
+    <div class="modal-head">編輯題目
+      <button class="modal-close" data-action="close-modal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-label">題目內容</div>
+      <textarea id="edit-question">${esc(q.question)}</textarea>
+      <div class="field-label">選項內容（點選圓圈設定正確答案）</div>
+      ${optRows}
+      <button class="save-btn" data-action="save-edit">儲存</button>
+    </div>`);
+}
+
+function saveEdit(){
+  const q = state.quiz.list[state.quiz.idx];
+  const newQ = document.getElementById('edit-question').value.trim();
+  if(newQ) q.question = newQ;
+  document.querySelectorAll('.edit-opt-text').forEach(inp=>{
+    const lab = inp.dataset.lab;
+    const opt = q.options.find(o=>o.label===lab);
+    if(opt) opt.text = inp.value.trim();
+  });
+  const checked = document.querySelector('input[name="edit-correct"]:checked');
+  if(checked) q.correctLabel = checked.value;
+  persistBank(state.quiz.bank);
+  closeModal();
+  renderQuizInPlace();
+  toast('已儲存修改');
+}
+
+function openEndConfirm(){
+  showModal(`
+    <div class="modal-head">是否要結束測驗？</div>
+    <div class="modal-body">
+      <div class="modal-btns">
+        <button class="btn-no" data-action="close-modal">NO</button>
+        <button class="btn-yes" data-action="confirm-end-yes">YES</button>
+      </div>
+    </div>`);
+}
+
+/* ============ QUIZ ============ */
+function startQuiz(list, opts){
+  if(list.length===0){ toast('沒有符合條件的題目'); return; }
+  state.quiz = {
+    bank: opts.bank,
+    scopeLabel: opts.scopeLabel,
+    pool: opts.pool,
+    list: list.slice(),
+    idx: 0,
+    answered: new Array(list.length).fill(null),
+    startTime: Date.now(),
+    fontScale: 1,
+    returnNav: state.nav.slice(),
+  };
+  go('quiz', {});
+}
+
+function renderQuiz(){
+  const qz = state.quiz;
+  const total = qz.list.length;
+  const top = `
+    <div class="topbar">
+      <div class="topbar-row">
+        <button class="topbar-btn" data-action="go-back">‹</button>
+        <div class="topbar-title">${esc(qz.bank.name)} - ${esc(qz.scopeLabel)}</div>
+        <div class="topbar-meta">${qz.idx+1}/${total}</div>
+      </div>
+      <div class="toolbar" id="quiz-toolbar"></div>
+    </div>`;
+  const body = `<div id="quiz-body"></div>
+    <div class="quiz-bottom">
+      <button class="qb-prev" data-action="quiz-prev" ${qz.idx===0?'disabled':''}>上一題</button>
+      <button class="qb-end" data-action="quiz-end">結束測驗</button>
+      <button class="qb-next" data-action="quiz-next" ${qz.idx===total-1?'disabled':''}>下一題</button>
+    </div>`;
+  setTimeout(renderQuizInPlace, 0);
+  return [top, body];
+}
+
+function renderQuizInPlace(){
+  const qz = state.quiz;
+  if(!qz) return;
+  const q = qz.list[qz.idx];
+  const ans = qz.answered[qz.idx];
+
+  // update progress/title meta without full re-render
+  const meta = document.querySelector('.topbar-meta');
+  if(meta) meta.textContent = (qz.idx+1)+'/'+qz.list.length;
+  document.querySelectorAll('.qb-prev').forEach(b=>b.disabled = qz.idx===0);
+  document.querySelectorAll('.qb-next').forEach(b=>b.disabled = qz.idx===qz.list.length-1);
+
+  const toolbar = document.getElementById('quiz-toolbar');
+  if(toolbar){
+    const starsHtml = Array.from({length:5}).map((_,i)=>`<span class="star-ic ${i<q.stars?'filled':''}">★</span>`).join('');
+    toolbar.innerHTML = `
+      <div class="stars-row">${starsHtml}</div>
+      <div class="tool-group">
+        <button class="tool-ic" data-action="quiz-skip-back">⏪</button>
+        <button class="tool-ic" data-action="quiz-skip-fwd">⏩</button>
+        <button class="tool-ic" data-action="quiz-font-inc">➕</button>
+        <button class="tool-ic" data-action="quiz-font-dec">➖</button>
+        <button class="tool-ic" data-action="quiz-edit">✎</button>
+        <button class="tool-ic ${q.favorite?'fav-on':''}" data-action="quiz-toggle-fav">${q.favorite?'♥':'♡'}</button>
+      </div>`;
+  }
+  const body = document.getElementById('quiz-body');
+  if(!body) return;
+  const optsHtml = q.options.map((o,i)=>{
+    let cls='opt-row';
+    let mark='';
+    if(ans){
+      cls+=' locked';
+      if(o.label===q.correctLabel){ cls+=' correct'; mark='✓'; }
+      else if(ans.selected===i){ cls+=' wrong'; mark='✕'; }
+    }
+    return `<div class="${cls}" ${ans?'':'data-action="quiz-answer" data-payload="'+attr({i})+'"'}>
+      <span class="mark">${mark}</span><span class="opt-lab">(${o.label})</span><span class="opt-text">${esc(o.text)}</span>
+    </div>`;
+  }).join('');
+  const showExplain = ans && q.explain;
+  body.innerHTML = `<div class="qwrap" style="--fs:${qz.fontScale}">
+    <div class="qtext">${esc(q.question)}</div>
+    <div class="opts">${optsHtml}</div>
+    <div class="qfoot">
+      ${showExplain? '<button class="explain-link" data-action="toggle-explain">解析</button>':'<span></span>'}
+      <button class="report-link" data-action="report-noop">回報</button>
+    </div>
+    <div id="explain-slot"></div>
+  </div>`;
+}
+
+function answerQuestion(i){
+  const qz = state.quiz;
+  if(qz.answered[qz.idx]) return;
+  const q = qz.list[qz.idx];
+  const opt = q.options[i];
+  const correct = opt.label===q.correctLabel;
+  const oldStars = q.stars;
+  q.stars = correct ? Math.min(5,q.stars+1) : 0;
+  qz.answered[qz.idx] = { selected:i, correct, starDelta: q.stars-oldStars };
+  persistBank(qz.bank);
+  renderQuizInPlace();
+}
+
+function quizMove(delta){
+  const qz = state.quiz;
+  qz.idx = Math.max(0, Math.min(qz.list.length-1, qz.idx+delta));
+  renderQuizInPlace();
+}
+
+/* ============ RESULT ============ */
+function finishQuiz(){
+  const qz = state.quiz;
+  const correctCount = qz.answered.filter(a=>a && a.correct).length;
+  const wrongCount = qz.answered.filter(a=>a && !a.correct).length;
+  const attempted = correctCount+wrongCount;
+  const accuracy = attempted? Math.round(correctCount/attempted*100) : 0;
+  const elapsed = Math.round((Date.now()-qz.startTime)/1000);
+  const starDelta = qz.answered.reduce((s,a)=>s+(a?a.starDelta:0),0);
+  const poolStats = statsFor(qz.pool);
+  const wrongIds = qz.list.filter((q,i)=>qz.answered[i] && !qz.answered[i].correct).map(q=>q.id);
+  qz.result = { correctCount, wrongCount, accuracy, elapsed, starDelta, poolStats, wrongIds };
+  goReplace('result', {});
+}
+
+function renderResult(){
+  const qz = state.quiz;
+  const r = qz.result;
+  const top = `
+    <div class="topbar"><div class="topbar-row">
+      <div style="width:34px"></div>
+      <div class="topbar-title">${esc(qz.scopeLabel)} ${esc(qz.bank.name)}</div>
+      <div style="width:34px"></div>
+    </div></div>`;
+  let msg = '繼續加油！';
+  if(r.accuracy>=85) msg='太棒了！';
+  else if(r.accuracy>=60) msg='表現不錯！';
+  const deltaTxt = r.starDelta>0? '+'+r.starDelta : (r.starDelta<0? String(r.starDelta) : '+0');
+  const deltaColor = r.starDelta>0? 'var(--green)' : (r.starDelta<0? 'var(--red)' : 'var(--text-soft)');
+  const body = `
+    <div class="result-wrap">
+      <div class="result-hero">
+        <div class="result-timer">測驗時間 ${fmtTime(r.elapsed)}</div>
+        <div class="result-circle">
+          <div class="lab">正確率</div>
+          <div class="pct">${r.accuracy}<span>%</span></div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-msg">${msg}</div>
+        <div class="result-stats">
+          <div class="rstat-row">
+            <div class="rstat-ic" style="color:var(--blue-dark)">○</div>
+            <div class="rstat-bar"><i style="width:${Math.min(100,r.correctCount*10)}%;background:var(--blue-dark)"></i></div>
+            <div class="rstat-num">${r.correctCount}</div>
+          </div>
+          <div class="rstat-row">
+            <div class="rstat-ic" style="color:var(--red)">✕</div>
+            <div class="rstat-bar"><i style="width:${Math.min(100,r.wrongCount*10)}%;background:var(--red)"></i></div>
+            <div class="rstat-num">${r.wrongCount}</div>
+          </div>
+          <div class="rstat-row">
+            <div class="rstat-ic" style="color:var(--gold)">★</div>
+            <div class="rstat-bar"><i style="width:${r.poolStats.pct}%;background:var(--gold)"></i></div>
+            <div class="rstat-num">${r.poolStats.starSum}/${r.poolStats.maxStars}</div>
+            <div class="rstat-delta" style="color:${deltaColor}">${deltaTxt}</div>
+          </div>
+        </div>
+        <div class="result-btns">
+          <button class="rb-back" data-action="result-back">返回</button>
+          <button class="rb-review" ${r.wrongCount===0?'disabled':''} data-action="result-review">錯誤複習</button>
+          <button class="rb-retry" data-action="result-retry">再次測驗</button>
+        </div>
+      </div>
+    </div>`;
+  return [top, body];
+}
+
+/* ============ Action handling ============ */
+document.addEventListener('click', function(e){
+  const modalBg = e.target.closest('[data-action="overlay-bg"]');
+  if(modalBg && !e.target.closest('[data-stop]')){ closeModal(); return; }
+
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  const payload = readAttr(el);
+
+  switch(action){
+    case 'open-bank': {
+      go('bankList', {bankId:payload.id});
+      break;
+    }
+    case 'delete-bank': {
+      const bank = findBank(payload.id);
+      showConfirmModal('確定要刪除「'+(bank?bank.name:'')+'」這個題庫嗎？此動作無法復原。', 'confirm-delete-bank', {id:payload.id}, '確定刪除');
+      break;
+    }
+    case 'confirm-delete-bank': {
+      idbDelete(payload.id);
+      state.banks = state.banks.filter(b=>b.id!==payload.id);
+      closeModal();
+      render();
+      break;
+    }
+    case 'open-upload': go('upload', {}); break;
+    case 'toggle-tutorial': state.tutorialOpen = !state.tutorialOpen; render(); break;
+    case 'copy-prompt': copyText(CONVERT_PROMPT); break;
+    case 'go-back': back(); break;
+    case 'add-opt-col': {
+      const up = state.tempUpload;
+      up.mapping.optionIdxs.push(up.mapping.optionIdxs.length ? up.mapping.optionIdxs[up.mapping.optionIdxs.length-1] : 0);
+      render();
+      break;
+    }
+    case 'remove-opt-col': {
+      const up = state.tempUpload;
+      if(up.mapping.optionIdxs.length>2){ up.mapping.optionIdxs.splice(payload.i,1); render(); }
+      break;
+    }
+    case 'confirm-mapping': {
+      const result = buildBankFromUpload();
+      if(!result) break;
+      state.banks.push(result.bank);
+      persistBank(result.bank);
+      state.tempUpload = null;
+      resetNavTo([{view:'home'}]);
+      const parts = [];
+      parts.push('匯入 '+result.bank.questions.length+' 題（原始資料共 '+result.totalRows+' 列）');
+      if(result.skippedNoQuestion>0) parts.push(result.skippedNoQuestion+' 列因題目欄空白被跳過');
+      if(result.skippedTooFewOptions>0) parts.push(result.skippedTooFewOptions+' 列因選項不足2個被跳過');
+      if(result.unresolved>0) parts.push(result.unresolved+' 題答案無法自動比對，已預設為第一個選項，請用鉛筆編輯修正');
+      toast(parts.join('；'));
+      break;
+    }
+    case 'open-star-modal': openStarModal(payload); break;
+    case 'open-heart-modal': openHeartModal(payload); break;
+    case 'close-modal': closeModal(); break;
+    case 'reset-hearts': {
+      showConfirmModal('確定要清除這個範圍內所有題目的收藏（愛心）嗎？', 'confirm-reset-hearts', payload, '確定清除');
+      break;
+    }
+    case 'confirm-reset-hearts': {
+      const {pool} = resolveScope(payload);
+      pool.forEach(q=>q.favorite=false);
+      persistBank(findBank(payload.bankId));
+      closeModal();
+      render();
+      break;
+    }
+    case 'start-mock': {
+      const {bank,pool} = resolveScope(payload);
+      const n = Math.min(50, pool.length);
+      const shuffled = [...pool].sort(()=>Math.random()-0.5).slice(0,n);
+      startQuiz(shuffled, {bank, pool, scopeLabel:'模擬測驗'});
+      break;
+    }
+    case 'start-group': {
+      const {bank,pool,list} = resolveScope(payload);
+      const groups = computeGroups(pool);
+      const labelPrefix = payload.category ? payload.category : (bank.hasCategory ? '全部題目' : bank.name);
+      const scopeLabel = groups.length<=1 ? labelPrefix : labelPrefix+' ('+payload.range+')';
+      startQuiz(list, {bank, pool:list, scopeLabel});
+      break;
+    }
+    case 'start-star-filter': {
+      const {bank,pool} = resolveScope(payload);
+      const n = payload.maxStar;
+      const filtered = n===0 ? pool.filter(q=>q.stars===0) : pool.filter(q=>q.stars<=n);
+      closeModal();
+      startQuiz(filtered, {bank, pool, scopeLabel:'星星篩選測驗'});
+      break;
+    }
+    case 'start-favorite-quiz': {
+      const {bank,pool} = resolveScope(payload);
+      const filtered = pool.filter(q=>q.favorite);
+      closeModal();
+      startQuiz(filtered, {bank, pool, scopeLabel:'我的最愛測驗'});
+      break;
+    }
+    case 'quiz-answer': answerQuestion(payload.i); break;
+    case 'quiz-prev': quizMove(-1); break;
+    case 'quiz-next': quizMove(1); break;
+    case 'quiz-skip-back': quizMove(-10); break;
+    case 'quiz-skip-fwd': quizMove(10); break;
+    case 'quiz-font-inc': state.quiz.fontScale = Math.min(1.6, state.quiz.fontScale+0.1); renderQuizInPlace(); break;
+    case 'quiz-font-dec': state.quiz.fontScale = Math.max(0.8, state.quiz.fontScale-0.1); renderQuizInPlace(); break;
+    case 'quiz-toggle-fav': {
+      const q = state.quiz.list[state.quiz.idx];
+      q.favorite = !q.favorite;
+      persistBank(state.quiz.bank);
+      renderQuizInPlace();
+      break;
+    }
+    case 'quiz-edit': openEditModal(); break;
+    case 'save-edit': saveEdit(); break;
+    case 'quiz-end': openEndConfirm(); break;
+    case 'confirm-end-yes': closeModal(); finishQuiz(); break;
+    case 'toggle-explain': {
+      const q = state.quiz.list[state.quiz.idx];
+      const slot = document.getElementById('explain-slot');
+      if(slot.innerHTML) slot.innerHTML='';
+      else slot.innerHTML = `<div class="explain-box">${esc(q.explain)}</div>`;
+      break;
+    }
+    case 'report-noop': toast('此功能尚未開放'); break;
+    case 'result-back': resetNavTo(state.quiz.returnNav); state.quiz=null; break;
+    case 'result-review': {
+      const qz = state.quiz;
+      const wrongList = qz.list.filter(q=>qz.result.wrongIds.includes(q.id));
+      const bank=qz.bank, pool=qz.pool, returnNav=qz.returnNav;
+      startQuiz(wrongList, {bank, pool, scopeLabel:'錯題複習'});
+      state.quiz.returnNav = returnNav;
+      break;
+    }
+    case 'result-retry': {
+      const qz = state.quiz;
+      startQuiz(qz.list, {bank:qz.bank, pool:qz.pool, scopeLabel:qz.scopeLabel});
+      state.quiz.returnNav = qz.returnNav;
+      break;
+    }
+  }
+});
+
+/* ============ Init ============ */
+(async function init(){
+  try{
+    state.banks = await idbGetAll();
+  }catch(e){ console.error(e); }
+  state.tutorialOpen = state.banks.length===0;
+  render();
+})();
+
+})();
+</script>
+</body>
+</html>
