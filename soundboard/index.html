@@ -2,14 +2,14 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>🎵 溫柔音效板</title>
     <style>
-        /* ===== 全域重置 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -101,26 +101,6 @@
             background: #e8d0c8;
         }
 
-        .btn-small {
-            padding: 4px 12px;
-            font-size: 12px;
-            border-radius: 20px;
-            background: rgba(0, 0, 0, 0.04);
-            color: #8a7a6a;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .btn-small:hover {
-            background: rgba(0, 0, 0, 0.08);
-        }
-
-        .btn-small.danger:hover {
-            background: #f0d0c8;
-            color: #b06050;
-        }
-
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -134,7 +114,7 @@
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(200, 180, 160, 0.15);
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -143,6 +123,7 @@
             min-height: 140px;
             position: relative;
             user-select: none;
+            touch-action: manipulation;
         }
 
         .sound-card:hover {
@@ -266,6 +247,37 @@
             letter-spacing: 1px;
         }
 
+        /* ===== 拖曳狀態 ===== */
+        .sound-card.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+            box-shadow: 0 0 0 2px #b8a48a;
+        }
+
+        .sound-card.drag-over {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 2px #b8a48a, 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .sound-card.long-pressing {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #dccfc0, 0 12px 32px rgba(0, 0, 0, 0.12);
+            z-index: 100;
+            cursor: grabbing;
+        }
+
+        /* 拖曳浮動分身 */
+        .drag-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.85;
+            transform: scale(1.05) rotate(2deg);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            transition: none;
+        }
+
         /* Modal */
         .modal-overlay {
             position: fixed;
@@ -294,6 +306,8 @@
             width: 100%;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
             animation: modalIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @keyframes modalIn {
@@ -485,7 +499,6 @@
             letter-spacing: 1px;
         }
 
-        /* 載入中 */
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -498,12 +511,23 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 提示條 */
+        .hint-bar {
+            text-align: center;
+            font-size: 12px;
+            color: #b09a86;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+        }
+
+        /* 拖曳時禁止選取 */
+        body.dragging-active {
+            overflow: hidden;
+            user-select: none;
         }
 
         @media (max-width: 600px) {
@@ -574,10 +598,10 @@
 <body>
 
     <div class="container">
-        <a href="../index.html" style="display: inline-block; color: #8a7a6a; text-decoration: none; font-size: 14px; margin-bottom: 10px; transition: 0.2s;" onmouseover="this.style.color='#5a4a3a'" onmouseout="this.style.color='#8a7a6a'">← 回到遊戲列表</a>
+        <a href="../index.html" style="display: inline-block; color: #8a7a6a; text-decoration: none; font-size: 14px; margin-bottom: 10px; transition: 0.2s;" onmouseover="this.style.color='#5a4a3a'" onmouseout="this.style.color='#8a7a6a'">← 回到小工具</a>
         <div class="header">
             <h1>🎵 溫柔<span>音效板</span></h1>
-            <div class="sub">點擊方塊播放 · 按一下重新開始</div>
+            <div class="sub">點擊方塊播放 · 長按拖曳排序</div>
         </div>
 
         <div class="toolbar">
@@ -589,6 +613,8 @@
                 <button class="btn btn-danger" id="clearBtn" style="margin-left:8px;">🗑️ 清空全部</button>
             </div>
         </div>
+
+        <div class="hint-bar">💡 長按音效方塊可以拖曳調整順序</div>
 
         <div class="grid" id="gridContainer">
             <div class="loading">
@@ -655,6 +681,7 @@
             ];
 
             const DEFAULT_ICON = '🎵';
+            const LONG_PRESS_DURATION = 500; // 長按 0.5 秒觸發拖曳
 
             // ============================================================
             // 2. 狀態
@@ -663,6 +690,19 @@
             let editingIndex = null;
             let db = null;
             let isLoading = true;
+
+            // 拖曳狀態
+            let dragState = {
+                active: false,
+                startX: 0,
+                startY: 0,
+                currentId: null,
+                longPressTimer: null,
+                ghostEl: null,
+                placeholderEl: null,
+                originIndex: -1,
+                lastOverEl: null,
+            };
 
             // ============================================================
             // 3. DOM 元素
@@ -685,7 +725,7 @@
 
             let selectedColor = COLOR_PALETTE[0];
             let imageDataUrl = null;
-            let tempAudioData = null; // 暫存音檔（編輯時不覆蓋）
+            let tempAudioData = null;
 
             // ============================================================
             // 4. IndexedDB 操作
@@ -793,13 +833,16 @@
                 try {
                     await openDB();
                     const data = await loadAllSounds();
+                    // 按照 order 排序（如果沒有 order，則按 id）
                     sounds = data.map((item) => ({
                         id: item.id,
                         name: item.name || '未命名',
                         audioData: item.audioData || null,
                         image: item.image || null,
                         color: item.color || COLOR_PALETTE[0],
-                    }));
+                        order: item.order !== undefined ? item.order : item.id,
+                    })).sort((a, b) => a.order - b.order);
+
                     isLoading = false;
                     render();
                     initColorPicker();
@@ -882,13 +925,18 @@
 
                 // 綁定事件
                 grid.querySelectorAll('.sound-card:not(.add-card)').forEach(el => {
+                    // 點擊播放
                     el.addEventListener('click', function(e) {
                         if (e.target.closest('.card-actions')) return;
+                        if (dragState.active) return;
                         const id = parseInt(this.dataset.id);
                         if (!isNaN(id)) {
                             playSound(id);
                         }
                     });
+
+                    // 長按拖曳
+                    setupDragEvents(el);
                 });
 
                 grid.querySelectorAll('.btn-icon.edit').forEach(btn => {
@@ -954,7 +1002,307 @@
             }
 
             // ============================================================
-            // 8. CRUD 操作
+            // 8. 拖曳排序
+            // ============================================================
+
+            function setupDragEvents(el) {
+                // 滑鼠事件（電腦）
+                el.addEventListener('mousedown', onPointerDown);
+                // 觸控事件（手機）
+                el.addEventListener('touchstart', onPointerDown, { passive: true });
+            }
+
+            function onPointerDown(e) {
+                // 如果點到按鈕，不觸發拖曳
+                if (e.target.closest('.card-actions')) return;
+
+                const el = e.currentTarget;
+                const id = parseInt(el.dataset.id);
+                if (isNaN(id)) return;
+
+                // 取得座標
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                // 記錄起始位置
+                dragState.startX = clientX;
+                dragState.startY = clientY;
+                dragState.currentId = id;
+                dragState.originIndex = sounds.findIndex(s => s.id === id);
+
+                // 設定長按計時器
+                dragState.longPressTimer = setTimeout(() => {
+                    startDrag(el, clientX, clientY);
+                }, LONG_PRESS_DURATION);
+
+                // 綁定移動和放開事件
+                document.addEventListener('mousemove', onPointerMove);
+                document.addEventListener('mouseup', onPointerUp);
+                document.addEventListener('touchmove', onPointerMove, { passive: false });
+                document.addEventListener('touchend', onPointerUp);
+                document.addEventListener('touchcancel', onPointerUp);
+            }
+
+            function onPointerMove(e) {
+                if (!dragState.currentId) return;
+
+                let clientX, clientY;
+                if (e.touches) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+
+                // 如果還沒進入拖曳模式，檢查是否移動太遠（取消長按）
+                if (!dragState.active) {
+                    const dx = Math.abs(clientX - dragState.startX);
+                    const dy = Math.abs(clientY - dragState.startY);
+                    if (dx > 10 || dy > 10) {
+                        // 移動太遠，取消長按
+                        clearTimeout(dragState.longPressTimer);
+                        dragState.longPressTimer = null;
+                        cleanupDragListeners();
+                        dragState.currentId = null;
+                    }
+                    return;
+                }
+
+                // 拖曳模式：阻止滾動
+                if (e.cancelable) e.preventDefault();
+
+                // 移動幽靈元素
+                if (dragState.ghostEl) {
+                    dragState.ghostEl.style.left = (clientX - 70) + 'px';
+                    dragState.ghostEl.style.top = (clientY - 70) + 'px';
+                }
+
+                // 檢查是否懸停在某個音效卡上
+                const elementUnder = document.elementFromPoint(clientX, clientY);
+                if (!elementUnder) return;
+                const targetCard = elementUnder.closest('.sound-card:not(.add-card)');
+
+                if (targetCard && targetCard !== dragState.placeholderEl) {
+                    const targetId = parseInt(targetCard.dataset.id);
+                    if (targetId === dragState.currentId) return;
+
+                    // 交換位置
+                    swapCards(dragState.currentId, targetId);
+                }
+            }
+
+            function onPointerUp(e) {
+                if (dragState.longPressTimer) {
+                    clearTimeout(dragState.longPressTimer);
+                    dragState.longPressTimer = null;
+                }
+
+                if (dragState.active) {
+                    endDrag();
+                } else {
+                    // 沒有觸發拖曳，清理監聽
+                    cleanupDragListeners();
+                }
+
+                dragState.currentId = null;
+            }
+
+            function startDrag(el, clientX, clientY) {
+                dragState.active = true;
+                dragState.longPressTimer = null;
+
+                // 加入拖曳狀態
+                el.classList.add('long-pressing');
+                document.body.classList.add('dragging-active');
+
+                // 建立幽靈元素（複製卡片）
+                const rect = el.getBoundingClientRect();
+                const ghost = el.cloneNode(true);
+                ghost.className = 'sound-card drag-ghost';
+                ghost.style.width = rect.width + 'px';
+                ghost.style.height = rect.height + 'px';
+                ghost.style.left = (clientX - rect.width / 2) + 'px';
+                ghost.style.top = (clientY - rect.height / 2) + 'px';
+                ghost.style.borderColor = el.style.borderColor || 'rgba(200, 180, 160, 0.15)';
+                document.body.appendChild(ghost);
+                dragState.ghostEl = ghost;
+
+                // 原卡片變成半透明佔位
+                el.classList.add('dragging');
+                dragState.placeholderEl = el;
+
+                // 震動回饋（手機支援）
+                if (navigator.vibrate) {
+                    navigator.vibrate(30);
+                }
+            }
+
+            function swapCards(dragId, targetId) {
+                const dragIdx = sounds.findIndex(s => s.id === dragId);
+                const targetIdx = sounds.findIndex(s => s.id === targetId);
+                if (dragIdx === -1 || targetIdx === -1) return;
+
+                // 交換陣列中的位置
+                const temp = sounds[dragIdx];
+                sounds[dragIdx] = sounds[targetIdx];
+                sounds[targetIdx] = temp;
+
+                // 更新順序
+                sounds.forEach((s, i) => {
+                    s.order = i + 1;
+                });
+
+                // 重新渲染（不重新綁定事件，避免影響拖曳）
+                renderCardsOnly();
+
+                // 重新找到佔位元素
+                const newEl = grid.querySelector(`.sound-card[data-id="${dragId}"]`);
+                if (newEl) {
+                    newEl.classList.add('dragging');
+                    dragState.placeholderEl = newEl;
+                }
+            }
+
+            // 只重新渲染卡片，不重新綁定事件
+            function renderCardsOnly() {
+                const items = [];
+                sounds.forEach((sound) => {
+                    items.push({ type: 'sound', data: sound });
+                });
+                if (sounds.length < MAX_SOUNDS) {
+                    items.push({ type: 'add' });
+                }
+
+                let html = '';
+                items.forEach((item) => {
+                    if (item.type === 'add') {
+                        html += `
+                            <div class="sound-card add-card" id="addCard">
+                                <div class="add-icon">＋</div>
+                                <div class="add-text">新增音效</div>
+                            </div>
+                        `;
+                    } else {
+                        const s = item.data;
+                        const color = s.color || COLOR_PALETTE[0];
+
+                        let imageHtml = '';
+                        if (s.image && s.image.startsWith('data:image')) {
+                            imageHtml = `<img src="${s.image}" alt="${s.name}" />`;
+                        } else {
+                            imageHtml = `<span class="default-icon">${DEFAULT_ICON}</span>`;
+                        }
+
+                        html += `
+                            <div class="sound-card" data-id="${s.id}" style="border-color:${color}40;">
+                                <div class="card-color" style="background:${color};"></div>
+                                <div class="card-image">${imageHtml}</div>
+                                <div class="card-name">${escapeHtml(s.name)}</div>
+                                <div class="card-actions">
+                                    <button class="btn-icon edit" data-id="${s.id}" title="編輯">✏️</button>
+                                    <button class="btn-icon delete" data-id="${s.id}" title="刪除">✕</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+
+                grid.innerHTML = html;
+
+                // 重新綁定事件
+                grid.querySelectorAll('.sound-card:not(.add-card)').forEach(el => {
+                    el.addEventListener('click', function(e) {
+                        if (e.target.closest('.card-actions')) return;
+                        if (dragState.active) return;
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            playSound(id);
+                        }
+                    });
+                    setupDragEvents(el);
+                });
+
+                grid.querySelectorAll('.btn-icon.edit').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            openEditModal(id);
+                        }
+                    });
+                });
+
+                grid.querySelectorAll('.btn-icon.delete').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        const id = parseInt(this.dataset.id);
+                        if (!isNaN(id)) {
+                            deleteSound(id);
+                        }
+                    });
+                });
+
+                const addCard = document.getElementById('addCard');
+                if (addCard) {
+                    addCard.addEventListener('click', openAddModal);
+                }
+            }
+
+            async function endDrag() {
+                dragState.active = false;
+                document.body.classList.remove('dragging-active');
+
+                // 移除幽靈元素
+                if (dragState.ghostEl) {
+                    dragState.ghostEl.remove();
+                    dragState.ghostEl = null;
+                }
+
+                // 移除拖曳狀態
+                grid.querySelectorAll('.sound-card').forEach(el => {
+                    el.classList.remove('dragging', 'long-pressing', 'drag-over');
+                });
+
+                // 儲存新順序到 IndexedDB
+                try {
+                    for (let i = 0; i < sounds.length; i++) {
+                        const s = sounds[i];
+                        s.order = i + 1;
+                        const data = {
+                            name: s.name,
+                            audioData: s.audioData,
+                            image: s.image,
+                            color: s.color,
+                            order: s.order,
+                        };
+                        await updateSound(s.id, data);
+                    }
+                    console.log('✅ 順序已儲存');
+                } catch (e) {
+                    console.error('儲存順序失敗:', e);
+                }
+
+                dragState.placeholderEl = null;
+                cleanupDragListeners();
+            }
+
+            function cleanupDragListeners() {
+                document.removeEventListener('mousemove', onPointerMove);
+                document.removeEventListener('mouseup', onPointerUp);
+                document.removeEventListener('touchmove', onPointerMove);
+                document.removeEventListener('touchend', onPointerUp);
+                document.removeEventListener('touchcancel', onPointerUp);
+            }
+
+            // ============================================================
+            // 9. CRUD 操作
             // ============================================================
 
             async function addSound(name, audioData, imageData, color) {
@@ -972,11 +1320,13 @@
                 }
 
                 try {
+                    const newOrder = sounds.length + 1;
                     const newId = await saveSound({
                         name: name.trim(),
                         audioData: audioData,
                         image: imageData || null,
                         color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
+                        order: newOrder,
                     });
 
                     sounds.push({
@@ -985,6 +1335,7 @@
                         audioData: audioData,
                         image: imageData || null,
                         color: color || COLOR_PALETTE[sounds.length % COLOR_PALETTE.length],
+                        order: newOrder,
                     });
 
                     render();
@@ -1010,6 +1361,7 @@
                         audioData: sounds[idx].audioData,
                         image: newImage !== undefined ? newImage : sounds[idx].image,
                         color: newColor || sounds[idx].color,
+                        order: sounds[idx].order,
                     };
                     await updateSound(id, updated);
 
@@ -1040,6 +1392,10 @@
 
                     await deleteSoundFromDB(id);
                     sounds = sounds.filter(s => s.id !== id);
+                    // 重新編號 order
+                    sounds.forEach((s, i) => {
+                        s.order = i + 1;
+                    });
                     render();
                 } catch (e) {
                     console.error('刪除失敗:', e);
@@ -1068,7 +1424,7 @@
             }
 
             // ============================================================
-            // 9. Modal 控制
+            // 10. Modal 控制
             // ============================================================
 
             function openModal(title, confirmText, callback) {
@@ -1174,7 +1530,7 @@
             }
 
             // ============================================================
-            // 10. 顏色選擇器
+            // 11. 顏色選擇器
             // ============================================================
 
             function initColorPicker() {
@@ -1201,7 +1557,7 @@
             }
 
             // ============================================================
-            // 11. 預覽更新
+            // 12. 預覽更新
             // ============================================================
 
             function updatePreview(iconHtml, name) {
@@ -1241,7 +1597,7 @@
             });
 
             // ============================================================
-            // 12. 事件綁定
+            // 13. 事件綁定
             // ============================================================
 
             addBtn.addEventListener('click', openAddModal);
@@ -1272,7 +1628,7 @@
             });
 
             // ============================================================
-            // 13. 啟動
+            // 14. 啟動
             // ============================================================
 
             init();
