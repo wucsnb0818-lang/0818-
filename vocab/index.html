@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>📖 單字通</title>
+    <style>
+        :root {
+            --blue: #4f8fdc;
+            --blue-deep: #3a6fb8;
+            --blue-pale: #eaf2fc;
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #1d2733;
+            --text-soft: #6b7785;
+            --text-faint: #9aa4b2;
+            --border: #e6eaf0;
+            --green: #2fae60;
+            --red: #e5484d;
+            --radius: 14px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #app {
+            max-width: 480px;
+            width: 100%;
+            background: var(--card);
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 40px rgba(0,0,0,0.05);
+        }
+
+        /* ===== 頂部導覽列 ===== */
+        .topbar {
+            background: var(--blue);
+            color: #fff;
+            padding: 14px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .topbar-title {
+            font-size: 16px;
+            font-weight: 700;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .btn-nav {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: 0.2s;
+            z-index: 2;
+        }
+        .btn-nav:active { background: rgba(255,255,255,0.3); }
+        .btn-nav.placeholder { visibility: hidden; }
+
+        /* ===== 列表與按鈕 ===== */
+        .list-wrap { padding: 16px; flex: 1; overflow-y: auto; }
+        
+        .class-card {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .class-card:active { background: var(--blue-pale); }
+        .class-icon {
+            width: 44px; height: 44px;
+            background: var(--blue-pale);
+            color: var(--blue-deep);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; margin-right: 14px;
+        }
+        .class-info { flex: 1; min-width: 0; }
+        .class-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .class-sub { font-size: 13px; color: var(--text-soft); }
+        .btn-edit-class {
+            background: none; border: none; font-size: 18px; padding: 8px; cursor: pointer;
+        }
+
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 60px; height: 60px; border-radius: 50%;
+            background: var(--blue); color: #fff;
+            font-size: 32px; border: none; cursor: pointer;
+            box-shadow: 0 4px 16px rgba(79,143,220,0.4);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 20;
+        }
+        .fab:active { transform: scale(0.9); }
+        @media (min-width: 480px) {
+            .fab { right: calc(50% - 210px); }
+        }
+
+        /* ===== 大按鈕頁面 ===== */
+        .menu-wrap { padding: 30px 20px; display: flex; flex-direction: column; gap: 20px; }
+        .btn-large {
+            padding: 40px 20px; border-radius: var(--radius);
+            font-size: 22px; font-weight: 700;
+            border: none; color: #fff; cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        .btn-large.blue { background: var(--blue); }
+        .btn-large.green { background: var(--green); }
+        .btn-large:active { transform: scale(0.97); }
+
+        /* ===== 單字列表頁 ===== */
+        .word-list { padding-bottom: 80px; }
+        .word-row {
+            display: flex; align-items: center; padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .word-num { width: 30px; color: var(--text-faint); font-size: 13px; font-weight: 700; }
+        .word-en { font-weight: 600; font-size: 15px; margin-right: 8px; flex: 0 0 auto; }
+        .word-zh { color: var(--text-soft); font-size: 14px; flex: 1; }
+        .word-actions { display: flex; gap: 10px; }
+        .word-actions button {
+            background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-faint); padding: 4px;
+        }
+        .word-actions .fav-on { color: var(--red); }
+        .hidden-word {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        /* ===== 輸入框與鍵盤 ===== */
+        .input-wrap { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .input-field {
+            width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: var(--radius);
+            font-size: 16px; font-family: inherit; background: var(--bg);
+        }
+        .input-field:focus { outline: none; border-color: var(--blue); }
+        
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-primary, .btn-secondary {
+            flex: 1; padding: 14px; border-radius: var(--radius);
+            font-size: 16px; font-weight: 700; border: none; cursor: pointer;
+        }
+        .btn-primary { background: var(--blue); color: #fff; }
+        .btn-primary:active { opacity: 0.8; }
+        .btn-secondary { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); }
+        .btn-secondary:active { background: var(--border); }
+
+        /* ===== 測驗設定卡片 ===== */
+        .setting-section { margin-bottom: 24px; }
+        .setting-title { font-size: 14px; font-weight: 700; color: var(--text-soft); margin-bottom: 12px; }
+        .setting-cards { display: flex; gap: 10px; }
+        .setting-card {
+            flex: 1; padding: 16px 10px; border: 2px solid var(--border);
+            border-radius: var(--radius); text-align: center;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            color: var(--text-soft); transition: 0.2s;
+        }
+        .setting-card.selected {
+            border-color: var(--blue); background: var(--blue-pale); color: var(--blue-deep);
+        }
+
+        /* ===== 測驗介面 ===== */
+        .quiz-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--border);
+        }
+        .quiz-info { display: flex; gap: 12px; align-items: center; font-size: 14px; }
+        .btn-fav-quiz { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-faint); }
+        .btn-fav-quiz.fav-on { color: var(--red); }
+        .btn-end-quiz { background: var(--bg); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; color: var(--text-soft); }
+
+        .quiz-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .quiz-question { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 40px; }
+        
+        .quiz-blanks { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; margin-bottom: 20px; }
+        
+        .blank-line {
+            display: inline-block; width: 24px; height: 32px;
+            border-bottom: 3px solid var(--text-faint);
+            font-size: 22px; font-weight: 700; text-align: center; line-height: 32px;
+            margin: 0 2px;
+        }
+        
+        /* 給英文翻中文的超長底線：強制固定寬度 300px */
+        .blank-line.long { 
+            display: block;
+            width: 300px; 
+            max-width: 100%;
+            border-bottom: 2px solid var(--text-faint); 
+            text-align: center; 
+            padding: 10px 0; 
+            height: auto; 
+            min-height: 50px; 
+            font-size: 20px; 
+            margin: 0 auto;
+        }
+        
+        .blank-line.space { width: 16px; border-bottom: none; }
+        .blank-line.correct { border-bottom-color: var(--green); color: var(--green); }
+        .blank-line.wrong { border-bottom-color: var(--red); color: var(--red); }
+        
+        .symbol-display {
+            display: inline-block; height: 32px;
+            font-size: 22px; font-weight: 700; line-height: 32px;
+            margin: 0; padding: 0 2px; color: var(--text);
+        }
+
+        #chinese-input { width: 100%; opacity: 0; position: absolute; bottom: 0; left: 0; height: 40px; }
+
+        /* ===== 自訂英文鍵盤 ===== */
+        .custom-keyboard {
+            background: #d1d5db; padding: 8px 4px 20px 4px;
+            display: flex; flex-direction: column; gap: 8px;
+            user-select: none; margin-top: auto;
+        }
+        .keyboard-row { display: flex; justify-content: center; gap: 6px; }
+        .key-btn {
+            background: #fff; border: none; border-radius: 6px;
+            height: 44px; flex: 1; max-width: 40px;
+            font-size: 16px; font-weight: 500; color: #333;
+            box-shadow: 0 1px 0 #999; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key-btn:active { background: #e5e7eb; transform: translateY(1px); box-shadow: none; }
+        .key-btn.wide { max-width: 60px; flex: 1.5; }
+        .key-btn.delete-btn { background: #9ca3af; color: #fff; box-shadow: 0 1px 0 #6b7280; font-size: 20px; }
+
+        /* ===== 結算畫面 ===== */
+        .result-wrap { display: flex; flex-direction: column; min-height: 100%; text-align: center; }
+        .result-hero { background: var(--blue); color: #fff; padding: 30px 20px 60px; border-radius: 0 0 20px 20px; width: 100%; display: flex; justify-content: center; }
+        .result-circle {
+            width: 140px; height: 140px; border-radius: 50%; background: #fff;
+            color: var(--text); margin: 0 auto -50px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); position: relative; z-index: 2;
+        }
+        .result-circle .pct { font-size: 40px; font-weight: 900; color: var(--blue); line-height: 1; }
+        .result-circle .lab { font-size: 13px; color: var(--text-soft); }
+        
+        .result-content { padding: 70px 20px 20px; flex: 1; background: var(--card); display: flex; flex-direction: column; align-items: center; }
+        .result-msg { font-size: 20px; font-weight: 700; margin-bottom: 24px; }
+        
+        .result-stats { background: var(--bg); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; text-align: left; width: 100%; max-width: 320px; }
+        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; font-size: 15px; font-weight: 600; }
+        .stat-row:last-child { margin-bottom: 0; }
+        .stat-row .num { margin-left: auto; font-size: 16px; }
+
+        .result-btns { display: flex; gap: 10px; width: 100%; max-width: 320px; }
+        .result-btns button { flex: 1; padding: 12px 0; border-radius: 20px; font-size: 14px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-res-back { background: var(--bg); color: var(--text-soft); }
+        .btn-res-review { background: rgba(229,72,77,0.1); color: var(--red); }
+        .btn-res-retry { background: var(--blue); color: #fff; }
+
+        /* ===== 彈出視窗 ===== */
+        .overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none; transition: 0.2s;
+        }
+        .overlay.active { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--card); width: 90%; max-width: 320px;
+            border-radius: var(--radius); overflow: hidden; padding: 20px;
+            transform: scale(0.9); transition: 0.2s;
+        }
+        .overlay.active .modal { transform: scale(1); }
+        .modal h3 { margin-bottom: 16px; font-size: 18px; text-align: center; }
+        
+        .toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 14px; z-index: 2000;
+            opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="navbar"></div>
+    <div id="content" style="flex:1; display:flex; flex-direction:column;"></div>
+</div>
+
+<div class="overlay" id="modal-overlay">
+    <div class="modal" id="modal-content"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+    'use strict';
+
+    const STORAGE_KEY = 'vocab_app_data';
+    function dbGetAll() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { return []; } }
+    function dbSaveAll(classesArray) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(classesArray)); } catch (e) { showToast('儲存失敗'); } }
+
+    let classes = [];
+    let currentClass = null;
+    let quizState = null;
+    let currentEnInput = ''; 
+
+    const appContent = document.getElementById('content');
+    const navbar = document.getElementById('navbar');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalContent = document.getElementById('modal-content');
+    const toastEl = document.getElementById('toast');
+
+    function generateId() { return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6); }
+    function showToast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(() => toastEl.classList.remove('show'), 2500); }
+    window.showToast = showToast;
+    function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({'&': '&amp;','<': '&lt;','>': '&gt;',"'": '&#39;','"': '&quot;'}[tag])); }
+
+    function updateNavbar(title, leftText, leftAction) {
+        let leftBtn = leftText 
+            ? `<button class="btn-nav" onclick="${leftAction || 'void(0)'}">${leftText}</button>` 
+            : `<div class="btn-nav placeholder">回</div>`;
+        
+        navbar.innerHTML = `
+            <div class="topbar">
+                ${leftBtn}
+                <div class="topbar-title">${escapeHTML(title)}</div>
+                <div class="btn-nav placeholder">選</div>
+            </div>
+        `;
+    }
+
+    function openModal(html) { modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
+    function closeModal() { modalOverlay.classList.remove('active'); }
+    window.closeModal = closeModal;
+
+    function saveCurrentClass() {
+        const idx = classes.findIndex(c => c.id === currentClass.id);
+        if (idx >= 0) classes[idx] = currentClass;
+        else classes.push(currentClass);
+        dbSaveAll(classes);
+    }
+
+    function renderHome() {
+        // 點擊「← 回主頁」會跳轉到上一層的 index.html
+        updateNavbar('單字通', '← 回主頁', 'window.location.href="../index.html"');
+        
+        let html = `<div class="list-wrap" style="padding-bottom:80px;">`;
+        if (classes.length === 0) {
+            html += `<div style="text-align:center; padding:60px 20px; color:var(--text-soft);">還沒有建立任何課程<br>點擊右下角「＋」開始吧！</div>`;
+        } else {
+            classes.forEach(c => {
+                const total = c.words.length;
+                const favs = c.words.filter(w => w.favorite).length;
+                html += `
+                    <div class="class-card" onclick="window.goToClass('${c.id}')">
+                        <div class="class-icon">📘</div>
+                        <div class="class-info">
+                            <div class="class-name">${escapeHTML(c.name)}</div>
+                            <div class="class-sub">共 ${total} 字 · 收藏 ${favs} 字</div>
+                        </div>
+                        <button class="btn-edit-class" onclick="event.stopPropagation(); window.openEditClass('${c.id}')">✏️</button>
+                    </div>
+                `;
+            });
+        }
+        html += `</div>`;
+        html += `<button class="fab" onclick="window.openAddClass()">＋</button>`;
+        appContent.innerHTML = html;
+    }
+    window.renderHome = renderHome;
+
+    window.openAddClass = function() {
+        openModal(`
+            <h3>新增課程</h3>
+            <input type="text" id="modal-class-name" class="input-field" placeholder="請輸入課名" style="margin-bottom:16px;">
+            <div class="btn-row"><button class="btn-secondary" onclick="closeModal()">取消</button><button class="btn-primary" onclick="window.saveClass()">建立</button></div>
+        `);
+        setTimeout(() => document.getElementById('modal-class-name').focus(), 100);
+    };
+
+    window.saveClass = function() {
+        const name = document.getElementById('modal-class-name').value.trim();
+        if (!name) return showToast('請輸入課名');
+        const newClass = { id: generateId(), name: name, words: [] };
+        classes.push(newClass);
+        dbSaveAll(classes);
+        closeModal();
+        currentClass = newClass;
+        renderAddWord(true);
+    };
+
+    window.openEditClass = function(id) {
+        const c = classes.find(x => x.id === id);
+        openModal(`
+            <h3>修改課程</h3>
+            <input type="text" id="modal-class-name" class="input-field" value="${escapeHTML(c.name)}" style="margin-bottom:16px;">
+            <div class="btn-row"><button class="btn-secondary" onclick="closeModal()">取消</button><button class="btn-primary" onclick="window.updateClass('${id}')">儲存</button></div>
+            <button class="btn-secondary" style="width:100%; margin-top:12px; color:var(--red);" onclick="window.deleteClass('${id}')">刪除這課</button>
+        `);
+    };
+
+    window.updateClass = function(id) {
+        const name = document.getElementById('modal-class-name').value.trim();
+        if (!name) return showToast('請輸入課名');
+        const c = classes.find(x => x.id === id);
+        c.name = name;
+        dbSaveAll(classes);
+        closeModal();
+        renderHome();
+    };
+
+    window.deleteClass = function(id) {
+        if (!confirm('確定要刪除這課嗎？所有單字都會消失喔！')) return;
+        classes = classes.filter(x => x.id !== id);
+        dbSaveAll(classes);
+        closeModal();
+        renderHome();
+    };
+
+    window.goToClass = function(id) {
+        currentClass = classes.find(x => x.id === id);
+        renderClassMenu();
+    };
+
+    function renderClassMenu() {
+        updateNavbar(currentClass.name, '← 回選課', 'window.renderHome()');
+        appContent.innerHTML = `
+            <div class="menu-wrap">
+                <button class="btn-large blue" onclick="window.renderQuizSetup()">開始測驗</button>
+                <button class="btn-large green" onclick="window.renderWordList()">查看單字</button>
+            </div>
+        `;
+    }
+    window.renderClassMenu = renderClassMenu;
+
+    window.renderWordList = function() {
+        updateNavbar('查看單字', '← 回單字', 'window.renderClassMenu()');
+        renderWordListHTML();
+    };
+
+    function renderWordListHTML() {
+        let html = `<div class="word-list">`;
+        if (currentClass.words.length === 0) {
+            html += `<div style="text-align:center; padding:40px; color:var(--text-soft);">還沒有單字，點擊右下角新增！</div>`;
+        } else {
+            currentClass.words.forEach((w, i) => {
+                const hiddenClass = w.hidden ? 'hidden-word' : '';
+                html += `
+                    <div class="word-row">
+                        <div class="word-num">${i+1}</div>
+                        <div class="word-en ${hiddenClass}">${escapeHTML(w.en)}</div>
+                        <div class="word-zh ${hiddenClass}" style="margin-left:8px;">${escapeHTML(w.zh)}</div>
+                        <div class="word-actions">
+                            <button onclick="window.openEditWord(${i})">✏️</button>
+                            <button onclick="window.toggleHidden(${i})">${w.hidden ? '👁️‍🗨️' : '👁️'}</button>
+                            <button class="${w.favorite ? 'fav-on' : ''}" onclick="window.toggleFav(${i})">${w.favorite ? '❤️' : '♡'}</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        html += `</div>`;
+        html += `<button class="fab" onclick="window.renderAddWord(false)">＋</button>`;
+        appContent.innerHTML = html;
+    }
+    window.renderWordListHTML = renderWordListHTML;
+
+    window.toggleHidden = function(idx) {
+        currentClass.words[idx].hidden = !currentClass.words[idx].hidden;
+        saveCurrentClass();
+        renderWordListHTML();
+    };
+
+    window.toggleFav = function(idx) {
+        currentClass.words[idx].favorite = !currentClass.words[idx].favorite;
+        saveCurrentClass();
+        renderWordListHTML();
+    };
+
+    window.openEditWord = function(idx) {
+        const w = currentClass.words[idx];
+        openModal(`
+            <h3>修改單字</h3>
+            <input type="text" id="edit-en" class="input-field" value="${escapeHTML(w.en)}" placeholder="英文" style="margin-bottom:10px;">
+            <input type="text" id="edit-zh" class="input-field" value="${escapeHTML(w.zh)}" placeholder="中文" style="margin-bottom:16px;">
+            <div class="btn-row"><button class="btn-secondary" onclick="closeModal()">取消</button><button class="btn-primary" onclick="window.saveEditWord(${idx})">儲存</button></div>
+        `);
+    };
+
+    window.saveEditWord = function(idx) {
+        const en = document.getElementById('edit-en').value.trim();
+        const zh = document.getElementById('edit-zh').value.trim();
+        if (!en || !zh) return showToast('請填寫完整');
+        currentClass.words[idx].en = en;
+        currentClass.words[idx].zh = zh;
+        saveCurrentClass();
+        closeModal();
+        renderWordListHTML();
+    };
+
+    window.renderAddWord = function(isFirstTime) {
+        updateNavbar('新增單字', isFirstTime ? '← 回選課' : '← 回單字', isFirstTime ? 'window.renderHome()' : 'window.renderWordList()');
+        let html = `<div class="input-wrap" style="flex:1; overflow-y:auto; padding-bottom:20px;">`;
+        html += `<div style="max-height:40vh; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius); padding:10px; background:var(--bg);">`;
+        if (currentClass.words.length === 0) {
+            html += `<div style="color:var(--text-faint); text-align:center; font-size:13px; padding:20px;">目前沒有單字</div>`;
+        } else {
+            currentClass.words.forEach((w, i) => { html += `<div style="font-size:14px; padding:6px; border-bottom:1px solid var(--border);"><b>${escapeHTML(w.en)}</b> - ${escapeHTML(w.zh)}</div>`; });
+        }
+        html += `</div>`;
+        html += `
+            <div style="margin-top:10px;">
+                <input type="text" id="add-en" class="input-field" placeholder="英文單字" style="margin-bottom:10px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+                <input type="text" id="add-zh" class="input-field" placeholder="中文解釋" style="margin-bottom:16px;">
+                <div class="btn-row"><button class="btn-secondary" onclick="window.submitAddWord(true)">完成</button><button class="btn-primary" onclick="window.submitAddWord(false)">新增</button></div>
+            </div>
+        </div>`;
+        appContent.innerHTML = html;
+    };
+
+    window.submitAddWord = function(isFinish) {
+        const enInput = document.getElementById('add-en');
+        const zhInput = document.getElementById('add-zh');
+        const en = enInput.value.trim();
+        const zh = zhInput.value.trim();
+        if (en || zh) {
+            if (!en || !zh) return showToast('請填寫完整');
+            currentClass.words.push({ en, zh, hidden: false, favorite: false });
+            saveCurrentClass();
+        }
+        if (isFinish) { renderClassMenu(); } 
+        else {
+            enInput.value = ''; zhInput.value = ''; enInput.focus();
+            renderAddWord(false); showToast('已新增！');
+        }
+    };
+
+    let setupState = { dir: null, mode: null };
+
+    window.renderQuizSetup = function() {
+        updateNavbar('測驗設定', '← 回單字', 'window.renderClassMenu()');
+        setupState = { dir: null, mode: null };
+        appContent.innerHTML = `
+            <div style="padding:20px;">
+                <div class="setting-section">
+                    <div class="setting-title">選擇題目與回答方式</div>
+                    <div class="setting-cards">
+                        <div class="setting-card" id="card-zh-en" onclick="window.setSetup('dir', 'zh-en')">給中文<br>翻英文</div>
+                        <div class="setting-card" id="card-en-zh" onclick="window.setSetup('dir', 'en-zh')">給英文<br>翻中文</div>
+                    </div>
+                </div>
+                <div class="setting-section">
+                    <div class="setting-title">測驗模式</div>
+                    <div class="setting-cards">
+                        <div class="setting-card" id="card-random" onclick="window.setSetup('mode', 'random')">隨機測驗</div>
+                        <div class="setting-card" id="card-order" onclick="window.setSetup('mode', 'order')">順序測驗</div>
+                        <div class="setting-card" id="card-fav" onclick="window.setSetup('mode', 'fav')">重點題目</div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:100%; margin-top:20px;" onclick="window.startQuiz()">開始測驗</button>
+            </div>
+        `;
+    };
+
+    window.setSetup = function(type, val) {
+        setupState[type] = val;
+        if (type === 'dir') {
+            document.getElementById('card-zh-en').classList.remove('selected');
+            document.getElementById('card-en-zh').classList.remove('selected');
+            document.getElementById(`card-${val}`).classList.add('selected');
+        } else if (type === 'mode') {
+            document.getElementById('card-random').classList.remove('selected');
+            document.getElementById('card-order').classList.remove('selected');
+            document.getElementById('card-fav').classList.remove('selected');
+            document.getElementById(`card-${val}`).classList.add('selected');
+        }
+    };
+
+    window.startQuiz = function() {
+        if (!setupState.dir || !setupState.mode) return showToast('請選擇設定');
+        let pool = currentClass.words.filter(w => !w.hidden);
+        if (setupState.mode === 'fav') {
+            pool = pool.filter(w => w.favorite);
+            if (pool.length === 0) return showToast('這課還沒有重點題喔～');
+        }
+        if (pool.length === 0) return showToast('沒有單字可以測驗！');
+
+        let quizWords = [...pool];
+        if (setupState.mode === 'random') quizWords.sort(() => Math.random() - 0.5);
+
+        quizState = {
+            dir: setupState.dir, words: quizWords, idx: 0,
+            answered: new Array(quizWords.length).fill(null), startTime: Date.now()
+        };
+        currentEnInput = '';
+        renderQuiz();
+    };
+
+    function renderQuiz() {
+        const q = quizState.words[quizState.idx];
+        const isEnAnswer = quizState.dir === 'zh-en';
+        
+        updateNavbar('測驗中', '← 回單字', 'window.abortQuiz()');
+        
+        currentEnInput = ''; 
+
+        let html = `
+            <div class="quiz-header">
+                <div class="quiz-info">
+                    <button class="btn-fav-quiz ${q.favorite ? 'fav-on' : ''}" onclick="window.quizToggleFav()">${q.favorite ? '❤️' : '♡'}</button>
+                    <span style="font-weight:700; color:var(--text-soft);">${quizState.idx + 1}/${quizState.words.length}</span>
+                </div>
+                <button class="btn-end-quiz" onclick="window.endQuiz()">結束測驗</button>
+            </div>
+            <div class="quiz-body">
+                <div class="quiz-question">${escapeHTML(isEnAnswer ? q.zh : q.en)}</div>
+                <div class="quiz-blanks" id="quiz-blanks-container">
+        `;
+
+        const ansData = quizState.answered[quizState.idx];
+        
+        if (isEnAnswer) {
+            const chars = q.en.split('');
+            let letterCount = 0;
+
+            for (let i = 0; i < chars.length; i++) {
+                const c = chars[i];
+                if (/[a-zA-Z]/.test(c)) {
+                    let cls = ''; let displayChar = '';
+                    if (ansData) {
+                        if ((ansData.userAns[letterCount] || '').toLowerCase() === c.toLowerCase()) cls = 'correct';
+                        else { cls = 'wrong'; displayChar = c; }
+                    }
+                    html += `<div class="blank-line ${cls}">${ansData ? (ansData.isCorrect ? ansData.userAns[letterCount] : displayChar) : ''}</div>`;
+                    letterCount++;
+                } else if (c === ' ') {
+                    html += `<div class="blank-line space"></div>`;
+                } else {
+                    html += `<div class="symbol-display">${escapeHTML(c)}</div>`;
+                }
+            }
+            
+            html += `</div></div>`; 
+            html += `
+                <div class="custom-keyboard">
+                    <div class="keyboard-row">${'qwertyuiop'.split('').map(k=>`<button class="key-btn" onclick="window.keyPress('${k}')">${k}</button>`).join('')}</div>
+                    <div class="keyboard-row">${'asdfghjkl'.split('').map(k=>`<button class="key-btn" onclick="window.keyPress('${k}')">${k}</button>`).join('')}</div>
+                    <div class="keyboard-row">
+                        ${'zxcvbnm'.split('').map(k=>`<button class="key-btn" onclick="window.keyPress('${k}')">${k}</button>`).join('')}
+                        <button class="key-btn wide delete-btn" onclick="window.keyDelete()">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                        </button>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; padding:10px 20px 20px; background:var(--bg);">
+                    <button class="btn-secondary" style="flex:0.3; padding:10px;" onclick="window.prevQ()" ${quizState.idx===0?'disabled':''}>上一題</button>
+                    <button class="btn-primary" style="flex:0.4; padding:10px;" onclick="window.submitEnAnswer()" ${ansData?'disabled':''}>核對答案</button>
+                    <button class="btn-secondary" style="flex:0.3; padding:10px;" onclick="window.nextQ()" ${quizState.idx===quizState.words.length-1?'disabled':''}>下一題</button>
+                </div>
+            `;
+            appContent.innerHTML = html;
+
+        } else {
+            let cls = ''; let displayText = '';
+            if (ansData) {
+                cls = ansData.isCorrect ? 'correct' : 'wrong';
+                displayText = ansData.isCorrect ? ansData.userAns : q.zh; 
+            }
+            html += `
+                <div class="blank-line long ${cls}" id="zh-answer-display" style="cursor:text;">
+                    ${displayText || ''}
+                </div>
+                <input type="text" id="chinese-input" autocomplete="off">
+                </div></div>
+            `;
+            html += `
+                <div style="display:flex; justify-content:space-between; padding:20px; background:var(--bg); margin-top:auto;">
+                    <button class="btn-secondary" style="flex:0.3;" onclick="window.prevQ()" ${quizState.idx===0?'disabled':''}>上一題</button>
+                    <button class="btn-primary" style="flex:0.4;" onclick="window.submitZhAnswer()" ${ansData?'disabled':''}>核對答案</button>
+                    <button class="btn-secondary" style="flex:0.3;" onclick="window.nextQ()" ${quizState.idx===quizState.words.length-1?'disabled':''}>下一題</button>
+                </div>
+            `;
+            appContent.innerHTML = html;
+            
+            const zhDisplay = document.getElementById('zh-answer-display');
+            const zhInput = document.getElementById('chinese-input');
+            if (!ansData) {
+                zhDisplay.addEventListener('click', () => zhInput.focus());
+                zhInput.addEventListener('input', (e) => { zhDisplay.textContent = e.target.value; });
+            }
+        }
+    }
+
+    function renderEnTyping() {
+        const q = quizState.words[quizState.idx];
+        let blanks = document.querySelectorAll('.blank-line');
+        let charIdx = 0;
+        for (let i = 0; i < q.en.length; i++) {
+            if (/[a-zA-Z]/.test(q.en[i])) {
+                if (blanks[charIdx]) blanks[charIdx].textContent = currentEnInput[charIdx] || '';
+                charIdx++;
+            }
+        }
+    }
+
+    window.keyPress = function(char) {
+        const q = quizState.words[quizState.idx];
+        const targetLen = q.en.replace(/[^a-zA-Z]/g, '').length;
+        if (currentEnInput.length < targetLen) { currentEnInput += char; renderEnTyping(); }
+    };
+
+    window.keyDelete = function() { currentEnInput = currentEnInput.slice(0, -1); renderEnTyping(); };
+
+    window.submitEnAnswer = function() {
+        const q = quizState.words[quizState.idx];
+        const cleanTarget = q.en.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        const cleanUser = currentEnInput.replace(/[^a-zA-Z]/g, '').toLowerCase();
+        quizState.answered[quizState.idx] = { userAns: currentEnInput, isCorrect: cleanTarget === cleanUser };
+        renderQuiz(); 
+    };
+
+    window.submitZhAnswer = function() {
+        const q = quizState.words[quizState.idx];
+        const inputVal = document.getElementById('chinese-input').value;
+        const cleanStr = (s) => s.replace(/[\s.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+        quizState.answered[quizState.idx] = { userAns: inputVal, isCorrect: cleanStr(q.zh) === cleanStr(inputVal) };
+        renderQuiz();
+    };
+
+    window.prevQ = function() { if (quizState.idx > 0) { quizState.idx--; renderQuiz(); } };
+    window.nextQ = function() { if (quizState.idx < quizState.words.length - 1) { quizState.idx++; renderQuiz(); } };
+
+    window.quizToggleFav = function() {
+        const q = quizState.words[quizState.idx];
+        q.favorite = !q.favorite;
+        const orig = currentClass.words.find(w => w.en === q.en && w.zh === q.zh);
+        if (orig) orig.favorite = q.favorite;
+        saveCurrentClass();
+        renderQuiz();
+    };
+
+    window.abortQuiz = function() { if (confirm('確定要放棄這次測驗嗎？')) { quizState = null; renderClassMenu(); } };
+    window.endQuiz = function() {
+        const unanswered = quizState.answered.filter(a => a === null).length;
+        if (unanswered > 0) { if (!confirm(`還有 ${unanswered} 題尚未作答，確定要結束嗎？`)) return; }
+        renderResult();
+    };
+
+    function renderResult() {
+        updateNavbar('測驗結果', '← 回單字', 'window.renderClassMenu()');
+        
+        let correctCount = 0;
+        let wrongCount = 0;
+        let answeredCount = 0; 
+        
+        quizState.answered.forEach((a) => {
+            if (a) {
+                answeredCount++;
+                if (a.isCorrect) correctCount++;
+                else wrongCount++;
+            }
+        });
+
+        const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+        
+        let msg = "繼續加油！";
+        if (accuracy >= 85) msg = "太棒了！";
+        else if (accuracy >= 60) msg = "表現不錯！";
+
+        let html = `
+            <div class="result-wrap">
+                <div class="result-hero">
+                    <div class="result-circle">
+                        <div class="lab">正確率</div>
+                        <div class="pct">${accuracy}<span style="font-size:18px;">%</span></div>
+                    </div>
+                </div>
+                
+                <div class="result-content">
+                    <div class="result-msg">${msg}</div>
+                    
+                    <div class="result-stats">
+                        <div class="stat-row">
+                            <span style="color:var(--blue); font-size:20px;">○</span> 答對
+                            <span class="num">${correctCount}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span style="color:var(--red); font-size:20px;">✕</span> 答錯
+                            <span class="num">${wrongCount}</span>
+                        </div>
+                    </div>
+
+                    <div class="result-btns">
+                        <button class="btn-res-back" onclick="window.renderClassMenu()">返回</button>
+                        <button class="btn-res-review" onclick="window.reviewWrong()" ${wrongCount===0?'disabled':''}>錯誤複習</button>
+                        <button class="btn-res-retry" onclick="window.retryQuiz()">再次測驗</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        appContent.innerHTML = html;
+    }
+
+    window.reviewWrong = function() {
+        const wrongWords = [];
+        quizState.answered.forEach((a, i) => { if (a && !a.isCorrect) wrongWords.push(quizState.words[i]); });
+        if (wrongWords.length === 0) return;
+        quizState = {
+            dir: quizState.dir, words: wrongWords, idx: 0,
+            answered: new Array(wrongWords.length).fill(null), startTime: Date.now()
+        };
+        currentEnInput = '';
+        renderQuiz();
+    };
+
+    window.retryQuiz = function() { startQuiz(); };
+
+    function init() { classes = dbGetAll(); renderHome(); }
+    init();
+
+})();
+</script>
+</body>
+</html>
