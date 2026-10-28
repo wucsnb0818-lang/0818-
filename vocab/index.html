@@ -64,6 +64,7 @@
             pointer-events: none;
         }
 
+        /* 修正按鈕樣式，讓 <a> 標籤也能完美套用 */
         .btn-nav {
             background: rgba(255,255,255,0.15);
             border: none;
@@ -340,18 +341,29 @@
     window.showToast = showToast;
     function escapeHTML(str) { if (!str) return ''; return str.replace(/[&<>'"]/g, tag => ({'&': '&amp;','<': '&lt;','>': '&gt;',"'": '&#39;','"': '&quot;'}[tag])); }
 
+    // 【已修正】把「單字通」首頁的按鈕直接換成 <a> 超連結標籤，保證能跳轉
     function updateNavbar(title, leftText, leftAction) {
-        let leftBtn = leftText 
-            ? `<button class="btn-nav" onclick="${leftAction || 'void(0)'}">${leftText}</button>` 
-            : `<div class="btn-nav placeholder">回</div>`;
-        
-        navbar.innerHTML = `
-            <div class="topbar">
-                ${leftBtn}
-                <div class="topbar-title">${escapeHTML(title)}</div>
-                <div class="btn-nav placeholder">選</div>
-            </div>
-        `;
+        if (title === '單字通') {
+            navbar.innerHTML = `
+                <div class="topbar">
+                    <a href="https://wucsnb0818-lang.github.io/0818-/" class="btn-nav">← 回主頁</a>
+                    <div class="topbar-title">${escapeHTML(title)}</div>
+                    <div class="btn-nav placeholder">選</div>
+                </div>
+            `;
+        } else {
+            let leftBtn = leftText 
+                ? `<button class="btn-nav" onclick="${leftAction || 'void(0)'}">${leftText}</button>` 
+                : `<div class="btn-nav placeholder">回</div>`;
+            
+            navbar.innerHTML = `
+                <div class="topbar">
+                    ${leftBtn}
+                    <div class="topbar-title">${escapeHTML(title)}</div>
+                    <div class="btn-nav placeholder">選</div>
+                </div>
+            `;
+        }
     }
 
     function openModal(html) { modalContent.innerHTML = html; modalOverlay.classList.add('active'); }
@@ -366,8 +378,7 @@
     }
 
     function renderHome() {
-        // 這裡已經替換成你正確的網址了
-        updateNavbar('單字通', '← 回主頁', 'window.location.href="https://wucsnb0818-lang.github.io/0818-/"');
+        updateNavbar('單字通', '← 回主頁', '');
         
         let html = `<div class="list-wrap" style="padding-bottom:80px;">`;
         if (classes.length === 0) {
